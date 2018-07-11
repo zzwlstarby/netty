@@ -86,6 +86,9 @@ public class NioClient {
 
     private void handleConnectableKey(SelectionKey key) throws IOException {
         // 完成连接
+        if (!clientSocketChannel.isConnectionPending()) {
+            return;
+        }
         clientSocketChannel.finishConnect();
         // log
         System.out.println("接受新的 Channel");
