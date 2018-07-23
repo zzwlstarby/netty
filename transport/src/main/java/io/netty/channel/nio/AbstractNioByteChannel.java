@@ -41,7 +41,9 @@ import static io.netty.channel.internal.ChannelUtils.WRITE_STATUS_SNDBUF_FULL;
  * {@link AbstractNioChannel} base class for {@link Channel}s that operate on bytes.
  */
 public abstract class AbstractNioByteChannel extends AbstractNioChannel {
+
     private static final ChannelMetadata METADATA = new ChannelMetadata(false, 16);
+
     private static final String EXPECTED_TYPES =
             " (expected: " + StringUtil.simpleClassName(ByteBuf.class) + ", " +
             StringUtil.simpleClassName(FileRegion.class) + ')';

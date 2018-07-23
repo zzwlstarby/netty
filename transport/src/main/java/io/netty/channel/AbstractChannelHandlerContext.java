@@ -513,8 +513,7 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
     }
 
     @Override
-    public ChannelFuture connect(
-            final SocketAddress remoteAddress, final SocketAddress localAddress, final ChannelPromise promise) {
+    public ChannelFuture connect(final SocketAddress remoteAddress, final SocketAddress localAddress, final ChannelPromise promise) {
 
         if (remoteAddress == null) {
             throw new NullPointerException("remoteAddress");
