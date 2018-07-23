@@ -58,8 +58,7 @@ public class NioServerSocketChannel extends AbstractNioMessageChannel
              */
             return provider.openServerSocketChannel();
         } catch (IOException e) {
-            throw new ChannelException(
-                    "Failed to open a server socket.", e);
+            throw new ChannelException("Failed to open a server socket.", e);
         }
     }
 
