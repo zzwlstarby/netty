@@ -18,11 +18,13 @@ package io.netty.channel;
 import io.netty.util.concurrent.EventExecutorGroup;
 
 /**
+ * EventLoop 的分组接口
+ *
  * Special {@link EventExecutorGroup} which allows registering {@link Channel}s that get
  * processed for later selection during the event loop.
- *
  */
 public interface EventLoopGroup extends EventExecutorGroup {
+
     /**
      * Return the next {@link EventLoop} to use
      */
@@ -49,4 +51,5 @@ public interface EventLoopGroup extends EventExecutorGroup {
      */
     @Deprecated
     ChannelFuture register(Channel channel, ChannelPromise promise);
+
 }

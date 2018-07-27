@@ -16,6 +16,8 @@
 package io.netty.util.concurrent;
 
 /**
+ * 拒绝执行处理器接口
+ *
  * Similar to {@link java.util.concurrent.RejectedExecutionHandler} but specific to {@link SingleThreadEventExecutor}.
  */
 public interface RejectedExecutionHandler {
@@ -25,4 +27,5 @@ public interface RejectedExecutionHandler {
      * restrictions.
      */
     void rejected(Runnable task, SingleThreadEventExecutor executor);
+
 }

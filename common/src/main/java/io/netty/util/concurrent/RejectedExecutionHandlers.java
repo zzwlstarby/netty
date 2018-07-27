@@ -25,11 +25,14 @@ import java.util.concurrent.locks.LockSupport;
  * Expose helper methods which create different {@link RejectedExecutionHandler}s.
  */
 public final class RejectedExecutionHandlers {
+
     private static final RejectedExecutionHandler REJECT = new RejectedExecutionHandler() {
+
         @Override
         public void rejected(Runnable task, SingleThreadEventExecutor executor) {
             throw new RejectedExecutionException();
         }
+
     };
 
     private RejectedExecutionHandlers() { }
@@ -52,12 +55,16 @@ public final class RejectedExecutionHandlers {
         return new RejectedExecutionHandler() {
             @Override
             public void rejected(Runnable task, SingleThreadEventExecutor executor) {
-                if (!executor.inEventLoop()) {
+                if (!executor.inEventLoop()) { // 非 EventLoop 线程中。如果在 EventLoop 线程中，就无法执行任务，这就导致完全无法重试了。
+                    // 循环多次尝试添加到队列中
                     for (int i = 0; i < retries; i++) {
+                        // 唤醒执行器，进行任务执行。这样，就可能执行掉部分任务。
                         // Try to wake up the executor so it will empty its task queue.
                         executor.wakeup(false);
 
+                        // 阻塞等待
                         LockSupport.parkNanos(backOffNanos);
+                        // 添加任务
                         if (executor.offerTask(task)) {
                             return;
                         }
@@ -65,8 +72,10 @@ public final class RejectedExecutionHandlers {
                 }
                 // Either we tried to add the task from within the EventLoop or we was not able to add it even with
                 // backoff.
+                // 多次尝试添加失败，抛出 RejectedExecutionException 异常
                 throw new RejectedExecutionException();
             }
         };
     }
+
 }

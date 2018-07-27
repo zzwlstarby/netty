@@ -27,9 +27,12 @@ import static io.netty.util.concurrent.AbstractEventExecutor.*;
 
 
 /**
+ * EventExecutor ( 事件执行器 )的分组抽象类
+ *
  * Abstract base class for {@link EventExecutorGroup} implementations.
  */
 public abstract class AbstractEventExecutorGroup implements EventExecutorGroup {
+
     @Override
     public Future<?> submit(Runnable task) {
         return next().submit(task);
@@ -67,7 +70,7 @@ public abstract class AbstractEventExecutorGroup implements EventExecutorGroup {
 
     @Override
     public Future<?> shutdownGracefully() {
-        return shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD, DEFAULT_SHUTDOWN_TIMEOUT, TimeUnit.SECONDS);
+        return shutdownGracefully(DEFAULT_SHUTDOWN_QUIET_PERIOD /* 2 */, DEFAULT_SHUTDOWN_TIMEOUT /* 15 */, TimeUnit.SECONDS);
     }
 
     /**
@@ -88,14 +91,12 @@ public abstract class AbstractEventExecutorGroup implements EventExecutorGroup {
     }
 
     @Override
-    public <T> List<java.util.concurrent.Future<T>> invokeAll(Collection<? extends Callable<T>> tasks)
-            throws InterruptedException {
+    public <T> List<java.util.concurrent.Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
         return next().invokeAll(tasks);
     }
 
     @Override
-    public <T> List<java.util.concurrent.Future<T>> invokeAll(
-            Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+    public <T> List<java.util.concurrent.Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
         return next().invokeAll(tasks, timeout, unit);
     }
 
@@ -105,8 +106,7 @@ public abstract class AbstractEventExecutorGroup implements EventExecutorGroup {
     }
 
     @Override
-    public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
-            throws InterruptedException, ExecutionException, TimeoutException {
+    public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         return next().invokeAny(tasks, timeout, unit);
     }
 
@@ -114,4 +114,5 @@ public abstract class AbstractEventExecutorGroup implements EventExecutorGroup {
     public void execute(Runnable command) {
         next().execute(command);
     }
+
 }

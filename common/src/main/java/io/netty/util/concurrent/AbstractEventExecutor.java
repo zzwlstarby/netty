@@ -31,12 +31,25 @@ import java.util.concurrent.TimeUnit;
  * Abstract base class for {@link EventExecutor} implementations.
  */
 public abstract class AbstractEventExecutor extends AbstractExecutorService implements EventExecutor {
+
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractEventExecutor.class);
 
+    /**
+     * TODO 1006 EventLoop 优雅关闭
+     */
     static final long DEFAULT_SHUTDOWN_QUIET_PERIOD = 2;
+    /**
+     * 默认关闭超时，单位：秒
+     */
     static final long DEFAULT_SHUTDOWN_TIMEOUT = 15;
 
+    /**
+     * 所属 EventExecutorGroup
+     */
     private final EventExecutorGroup parent;
+    /**
+     * EventExecutor 数组。只包含自己，用于 {@link #iterator()}
+     */
     private final Collection<EventExecutor> selfCollection = Collections.<EventExecutor>singleton(this);
 
     protected AbstractEventExecutor() {
@@ -165,4 +178,5 @@ public abstract class AbstractEventExecutor extends AbstractExecutorService impl
             logger.warn("A task raised an exception. Task: {}", task, t);
         }
     }
+
 }

@@ -49,9 +49,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
+ * Nio EventLoop 实现类，实现对注册到其中的 Channel 的就绪的 IO 事件，和对用户提交的任务进行处理
+ *
  * {@link SingleThreadEventLoop} implementation which register the {@link Channel}'s to a
  * {@link Selector} and so does the multi-plexing of these in the event loop.
- *
  */
 public final class NioEventLoop extends SingleThreadEventLoop {
 
@@ -59,8 +60,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
     private static final int CLEANUP_INTERVAL = 256; // XXX Hard-coded value, but won't need customization.
 
-    private static final boolean DISABLE_KEYSET_OPTIMIZATION =
-            SystemPropertyUtil.getBoolean("io.netty.noKeySetOptimization", false);
+    private static final boolean DISABLE_KEYSET_OPTIMIZATION = SystemPropertyUtil.getBoolean("io.netty.noKeySetOptimization", false);
 
     private static final int MIN_PREMATURE_SELECTOR_RETURNS = 3;
     private static final int SELECTOR_AUTO_REBUILD_THRESHOLD;
@@ -71,6 +71,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             return selectNow();
         }
     };
+
     private final Callable<Integer> pendingTasksCallable = new Callable<Integer>() {
         @Override
         public Integer call() throws Exception {
@@ -84,6 +85,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     // - http://bugs.sun.com/view_bug.do?bug_id=6427854
     // - https://github.com/netty/netty/issues/203
     static {
+        // TODO 芋艿
         final String key = "sun.nio.ch.bugLevel";
         final String buglevel = SystemPropertyUtil.get(key);
         if (buglevel == null) {
@@ -100,11 +102,11 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             }
         }
 
+        // TODO 芋艿
         int selectorAutoRebuildThreshold = SystemPropertyUtil.getInt("io.netty.selectorAutoRebuildThreshold", 512);
         if (selectorAutoRebuildThreshold < MIN_PREMATURE_SELECTOR_RETURNS) {
             selectorAutoRebuildThreshold = 0;
         }
-
         SELECTOR_AUTO_REBUILD_THRESHOLD = selectorAutoRebuildThreshold;
 
         if (logger.isDebugEnabled()) {
@@ -120,6 +122,9 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     private Selector unwrappedSelector;
     private SelectedSelectionKeySet selectedKeys;
 
+    /**
+     * SelectorProvider 对象，用于创建 Selector 对象
+     */
     private final SelectorProvider provider;
 
     /**
@@ -131,7 +136,9 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     private final AtomicBoolean wakenUp = new AtomicBoolean();
 
     private final SelectStrategy selectStrategy;
-
+    /**
+     * 处理 Channel 的就绪的 IO 事件，占处理任务的总时间的比例
+     */
     private volatile int ioRatio = 50;
     private int cancelledKeys;
     private boolean needsToSelectAgain;
@@ -152,7 +159,11 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         selectStrategy = strategy;
     }
 
+    /**
+     * Selector 元组
+     */
     private static final class SelectorTuple {
+
         final Selector unwrappedSelector;
         final Selector selector;
 
@@ -165,8 +176,10 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             this.unwrappedSelector = unwrappedSelector;
             this.selector = selector;
         }
+
     }
 
+    // TODO 芋艿，优化的逻辑要写下。
     private SelectorTuple openSelector() {
         final Selector unwrappedSelector;
         try {
@@ -241,8 +254,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
         selectedKeys = selectedKeySet;
         logger.trace("instrumented a special java.util.Set into: {}", unwrappedSelector);
-        return new SelectorTuple(unwrappedSelector,
-                                 new SelectedSelectionKeySetSelector(unwrappedSelector, selectedKeySet));
+        return new SelectorTuple(unwrappedSelector, new SelectedSelectionKeySetSelector(unwrappedSelector, selectedKeySet));
     }
 
     /**
@@ -467,6 +479,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             } catch (Throwable t) {
                 handleLoopException(t);
             }
+            // TODO 1006 EventLoop 优雅关闭
             // Always handle shutdown even if the loop processing threw an exception.
             try {
                 if (isShuttingDown()) {
@@ -596,6 +609,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    // TODO 芋艿 run
     private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
         final AbstractNioChannel.NioUnsafe unsafe = ch.unsafe();
         if (!k.isValid()) {
@@ -612,7 +626,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             // and thus the SelectionKey could be cancelled as part of the deregistration process, but the channel is
             // still healthy and should not be closed.
             // See https://github.com/netty/netty/issues/5125
-            if (eventLoop != this || eventLoop == null) {
+            if (eventLoop != this) {
                 return;
             }
             // close the channel if the key is not valid anymore
@@ -650,6 +664,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    // TODO 芋艿 run
     private static void processSelectedKey(SelectionKey k, NioTask<SelectableChannel> task) {
         int state = 0;
         try {
@@ -674,6 +689,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    // TODO 芋艿 TODO 1006 EventLoop 优雅关闭
     private void closeAll() {
         selectAgain();
         Set<SelectionKey> keys = selector.keys();
@@ -695,6 +711,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    // TODO 芋艿 run
     private static void invokeChannelUnregistered(NioTask<SelectableChannel> task, SelectionKey k, Throwable cause) {
         try {
             task.channelUnregistered(k.channel(), cause);
@@ -824,4 +841,5 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             logger.warn("Failed to update SelectionKeys.", t);
         }
     }
+
 }

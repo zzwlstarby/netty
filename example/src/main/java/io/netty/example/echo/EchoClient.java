@@ -72,12 +72,17 @@ public final class EchoClient {
 
             // Start the client.
             // 连接服务器，并同步等待成功，即启动客户端
-            ChannelFuture f = b.connect(HOST, PORT).addListener(new ChannelFutureListener() {
+            ChannelFuture f = b.connect(HOST, PORT);
+//            final Channel channel = f.channel();
+            f.addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
                     System.out.println("连接完成");
+//                    channel.close();throw new RuntimeException("抛出异常");
                 }
-            }).sync();
+            });
+
+//            f.cancel(false);
 
             // Wait until the connection is closed.
             // 监听客户端关闭，并阻塞等待

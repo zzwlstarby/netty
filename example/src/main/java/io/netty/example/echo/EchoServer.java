@@ -26,6 +26,8 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 
+import java.util.concurrent.Callable;
+
 /**
  * Echoes back any received data from a client.
  */
@@ -33,6 +35,14 @@ public final class EchoServer {
 
     static final boolean SSL = System.getProperty("ssl") != null;
     static final int PORT = Integer.parseInt(System.getProperty("port", "8007"));
+
+    public static final class Callabler implements Callable {
+
+        @Override
+        public Object call() throws Exception {
+            return null;
+        }
+    }
 
     public static void main(String[] args) throws Exception {
         // Configure SSL.
@@ -49,6 +59,23 @@ public final class EchoServer {
         // 创建两个 EventLoopGroup 对象
         EventLoopGroup bossGroup = new NioEventLoopGroup(1); // 创建 boss 线程组 用于服务端接受客户端的连接
         EventLoopGroup workerGroup = new NioEventLoopGroup(); // 创建 worker 线程组 用于进行 SocketChannel 的数据读写
+
+//        ((NioEventLoop) workerGroup.next()).threadProperties();
+//        Collection<Callabler> callablers = new ArrayList<Callabler>();
+//        for (int i = 0; i < 10; i++) {
+//            callablers.add(new Callabler());
+//        }
+
+//        Set<Callable<Boolean>> set = Collections.<Callable<Boolean>>singleton(new Callable<Boolean>() {
+//            @Override
+//            public Boolean call() throws Exception {
+//                return Boolean.TRUE;
+//            }
+//        });
+//        ((NioEventLoop) workerGroup.next()).invokeAny(set);
+
+        Thread.sleep(Long.MAX_VALUE);
+
         // 创建 EchoServerHandler 对象
         final EchoServerHandler serverHandler = new EchoServerHandler();
         try {

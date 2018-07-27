@@ -16,9 +16,12 @@
 package io.netty.util.concurrent;
 
 /**
+ * 线程属性接口
+ *
  * Expose details for a {@link Thread}.
  */
 public interface ThreadProperties {
+
     /**
      * @see Thread#getState()
      */
@@ -58,4 +61,5 @@ public interface ThreadProperties {
      * @see Thread#isAlive()
      */
     boolean isAlive();
+
 }

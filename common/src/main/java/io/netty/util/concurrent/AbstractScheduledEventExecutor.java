@@ -26,18 +26,26 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 支持定时任务的 EventExecutor 的抽象类
+ *
  * Abstract base class for {@link EventExecutor}s that want to support scheduling.
  */
 public abstract class AbstractScheduledEventExecutor extends AbstractEventExecutor {
 
+    /**
+     * 定时任务排序器
+     */
     private static final Comparator<ScheduledFutureTask<?>> SCHEDULED_FUTURE_TASK_COMPARATOR =
             new Comparator<ScheduledFutureTask<?>>() {
                 @Override
                 public int compare(ScheduledFutureTask<?> o1, ScheduledFutureTask<?> o2) {
-                    return o1.compareTo(o2);
+                    return o1.compareTo(o2); //
                 }
             };
 
+    /**
+     * 定时任务队列
+     */
     PriorityQueue<ScheduledFutureTask<?>> scheduledTaskQueue;
 
     protected AbstractScheduledEventExecutor() {
@@ -67,7 +75,7 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
 
     /**
      * Cancel all scheduled tasks.
-     *
+     * <p>
      * This method MUST be called only when {@link #inEventLoop()} is {@code true}.
      */
     protected void cancelScheduledTasks() {
@@ -77,10 +85,9 @@ public abstract class AbstractScheduledEventExecutor extends AbstractEventExecut
             return;
         }
 
-        final ScheduledFutureTask<?>[] scheduledTasks =
-                scheduledTaskQueue.toArray(new ScheduledFutureTask<?>[0]);
+        final ScheduledFutureTask<?>[] scheduledTasks = scheduledTaskQueue.toArray(new ScheduledFutureTask<?>[0]);
 
-        for (ScheduledFutureTask<?> task: scheduledTasks) {
+        for (ScheduledFutureTask<?> task : scheduledTasks) {
             task.cancelWithoutRemove(false);
         }
 
