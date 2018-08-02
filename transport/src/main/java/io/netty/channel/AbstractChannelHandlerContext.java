@@ -39,48 +39,91 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         implements ChannelHandlerContext, ResourceLeakHint {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractChannelHandlerContext.class);
-    volatile AbstractChannelHandlerContext next;
-    volatile AbstractChannelHandlerContext prev;
 
-    private static final AtomicIntegerFieldUpdater<AbstractChannelHandlerContext> HANDLER_STATE_UPDATER =
-            AtomicIntegerFieldUpdater.newUpdater(AbstractChannelHandlerContext.class, "handlerState");
-
-    /**
-     * {@link ChannelHandler#handlerAdded(ChannelHandlerContext)} is about to be called.
-     */
-    private static final int ADD_PENDING = 1;
-    /**
-     * {@link ChannelHandler#handlerAdded(ChannelHandlerContext)} was called.
-     */
-    private static final int ADD_COMPLETE = 2;
-    /**
-     * {@link ChannelHandler#handlerRemoved(ChannelHandlerContext)} was called.
-     */
-    private static final int REMOVE_COMPLETE = 3;
     /**
      * Neither {@link ChannelHandler#handlerAdded(ChannelHandlerContext)}
      * nor {@link ChannelHandler#handlerRemoved(ChannelHandlerContext)} was called.
      */
-    private static final int INIT = 0;
+    private static final int INIT = 0; // 初始化
+    /**
+     * {@link ChannelHandler#handlerAdded(ChannelHandlerContext)} is about to be called.
+     */
+    private static final int ADD_PENDING = 1; // 添加准备中
+    /**
+     * {@link ChannelHandler#handlerAdded(ChannelHandlerContext)} was called.
+     */
+    private static final int ADD_COMPLETE = 2; // 已添加
+    /**
+     * {@link ChannelHandler#handlerRemoved(ChannelHandlerContext)} was called.
+     */
+    private static final int REMOVE_COMPLETE = 3; // 已移除
 
+    /**
+     * {@link #handlerState} 的原子更新器
+     */
+    private static final AtomicIntegerFieldUpdater<AbstractChannelHandlerContext> HANDLER_STATE_UPDATER = AtomicIntegerFieldUpdater.newUpdater(AbstractChannelHandlerContext.class, "handlerState");
+
+    /**
+     * 上一个节点
+     */
+    volatile AbstractChannelHandlerContext next;
+    /**
+     * 下一个节点
+     */
+    volatile AbstractChannelHandlerContext prev;
+    /**
+     * 是否为 inbound
+     */
     private final boolean inbound;
+    /**
+     * 是否为 outbound
+     */
     private final boolean outbound;
+    /**
+     * 所属 pipeline
+     */
     private final DefaultChannelPipeline pipeline;
+    /**
+     * 名字
+     */
     private final String name;
+    /**
+     * 是否使用有序的 EventExecutor ( {@link #executor} )，即 OrderedEventExecutor
+     */
     private final boolean ordered;
 
     // Will be set to null if no child executor should be used, otherwise it will be set to the
     // child executor.
+    /**
+     * EventExecutor 对象
+     */
     final EventExecutor executor;
+    /**
+     * TODO 1009 AbstractChannelHandlerContext 字段用途
+     */
     private ChannelFuture succeededFuture;
 
     // Lazily instantiated tasks used to trigger events to a handler with different executor.
     // There is no need to make this volatile as at worse it will just create a few more instances then needed.
+    /**
+     * TODO 1009 AbstractChannelHandlerContext 字段用途
+     */
     private Runnable invokeChannelReadCompleteTask;
+    /**
+     * TODO 1009 AbstractChannelHandlerContext 字段用途
+     */
     private Runnable invokeReadTask;
+    /**
+     * TODO 1009 AbstractChannelHandlerContext 字段用途
+     */
     private Runnable invokeChannelWritableStateChangedTask;
+    /**
+     * TODO 1009 AbstractChannelHandlerContext 字段用途
+     */
     private Runnable invokeFlushTask;
-
+    /**
+     * 处理器状态
+     */
     private volatile int handlerState = INIT;
 
     AbstractChannelHandlerContext(DefaultChannelPipeline pipeline, EventExecutor executor, String name,

@@ -20,6 +20,7 @@ package io.netty.util.internal;
  * used outside the scope of {@link DefaultPriorityQueue}.
  */
 public interface PriorityQueueNode {
+
     /**
      * This should be used to initialize the storage returned by {@link #priorityQueueIndex(DefaultPriorityQueue)}.
      */
@@ -41,4 +42,5 @@ public interface PriorityQueueNode {
      * @param i The index as used by {@link DefaultPriorityQueue}.
      */
     void priorityQueueIndex(DefaultPriorityQueue<?> queue, int i);
+
 }

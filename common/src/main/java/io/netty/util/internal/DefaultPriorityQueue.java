@@ -293,4 +293,5 @@ public final class DefaultPriorityQueue<T extends PriorityQueueNode> extends Abs
         queue[k] = node;
         node.priorityQueueIndex(this, k);
     }
+
 }

@@ -21,8 +21,18 @@ import java.nio.channels.Selector;
 import java.nio.channels.spi.SelectorProvider;
 import java.util.Set;
 
+/**
+ * 基于 Netty SelectedSelectionKeySet 作为 `selectionKeys` 的 Selector 实现类
+ */
 final class SelectedSelectionKeySetSelector extends Selector {
+
+    /**
+     * SelectedSelectionKeySet 对象
+     */
     private final SelectedSelectionKeySet selectionKeys;
+    /**
+     * 原始 Java NIO Selector 对象
+     */
     private final Selector delegate;
 
     SelectedSelectionKeySetSelector(Selector delegate, SelectedSelectionKeySet selectionKeys) {
@@ -52,19 +62,25 @@ final class SelectedSelectionKeySetSelector extends Selector {
 
     @Override
     public int selectNow() throws IOException {
+        // 重置 selectionKeys
         selectionKeys.reset();
+        // selectNow
         return delegate.selectNow();
     }
 
     @Override
     public int select(long timeout) throws IOException {
+        // 重置 selectionKeys
         selectionKeys.reset();
+        // select
         return delegate.select(timeout);
     }
 
     @Override
     public int select() throws IOException {
+        // 重置 selectionKeys
         selectionKeys.reset();
+        // select
         return delegate.select();
     }
 
@@ -77,4 +93,5 @@ final class SelectedSelectionKeySetSelector extends Selector {
     public void close() throws IOException {
         delegate.close();
     }
+
 }

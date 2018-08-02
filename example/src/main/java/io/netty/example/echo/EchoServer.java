@@ -27,6 +27,7 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Echoes back any received data from a client.
@@ -74,7 +75,7 @@ public final class EchoServer {
 //        });
 //        ((NioEventLoop) workerGroup.next()).invokeAny(set);
 
-        Thread.sleep(Long.MAX_VALUE);
+//        Thread.sleep(Long.MAX_VALUE);
 
         // 创建 EchoServerHandler 对象
         final EchoServerHandler serverHandler = new EchoServerHandler();
@@ -119,6 +120,13 @@ public final class EchoServer {
                     System.out.println("测试下被触发");
                 }
             }).sync();
+
+            bossGroup.schedule(new Runnable() {
+                @Override
+                public void run() {
+                    System.out.println("执行定时任务");
+                }
+            }, 5, TimeUnit.SECONDS);
 
             // Wait until the server socket is closed.
             // 监听服务端关闭，并阻塞等待

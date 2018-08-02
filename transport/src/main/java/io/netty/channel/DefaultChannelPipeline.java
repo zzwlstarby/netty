@@ -47,30 +47,71 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultChannelPipeline.class);
 
+    /**
+     * {@link #head} 的名字
+     */
     private static final String HEAD_NAME = generateName0(HeadContext.class);
+    /**
+     * {@link #tail} 的名字
+     */
     private static final String TAIL_NAME = generateName0(TailContext.class);
 
-    private static final FastThreadLocal<Map<Class<?>, String>> nameCaches =
-            new FastThreadLocal<Map<Class<?>, String>>() {
+    /**
+     * TODO 1008 DefaultChannelPipeline 字段用途
+     */
+    private static final FastThreadLocal<Map<Class<?>, String>> nameCaches = new FastThreadLocal<Map<Class<?>, String>>() {
+
         @Override
         protected Map<Class<?>, String> initialValue() throws Exception {
             return new WeakHashMap<Class<?>, String>();
         }
+
     };
 
+    /**
+     * {@link #estimatorHandle} 的原子更新器
+     */
     private static final AtomicReferenceFieldUpdater<DefaultChannelPipeline, MessageSizeEstimator.Handle> ESTIMATOR =
             AtomicReferenceFieldUpdater.newUpdater(
                     DefaultChannelPipeline.class, MessageSizeEstimator.Handle.class, "estimatorHandle");
+
+    /**
+     * Head 节点
+     */
     final AbstractChannelHandlerContext head;
+    /**
+     * Tail 节点
+     */
     final AbstractChannelHandlerContext tail;
 
+    /**
+     * 所属 Channel 对象
+     */
     private final Channel channel;
+    /**
+     * TODO 1008 DefaultChannelPipeline 字段用途
+     */
     private final ChannelFuture succeededFuture;
+    /**
+     * TODO 1008 DefaultChannelPipeline 字段用途
+     */
     private final VoidChannelPromise voidPromise;
+    /**
+     * TODO 1008 DefaultChannelPipeline 字段用途
+     */
     private final boolean touch = ResourceLeakDetector.isEnabled();
 
+    /**
+     * TODO 1008 DefaultChannelPipeline 字段用途
+     */
     private Map<EventExecutorGroup, EventExecutor> childExecutors;
+    /**
+     * TODO 1008 DefaultChannelPipeline 字段用途
+     */
     private volatile MessageSizeEstimator.Handle estimatorHandle;
+    /**
+     * TODO 1008 DefaultChannelPipeline 字段用途
+     */
     private boolean firstRegistration = true;
 
     /**
@@ -80,23 +121,29 @@ public class DefaultChannelPipeline implements ChannelPipeline {
      * We only keep the head because it is expected that the list is used infrequently and its size is small.
      * Thus full iterations to do insertions is assumed to be a good compromised to saving memory and tail management
      * complexity.
+     * TODO 1008 DefaultChannelPipeline 字段用途
      */
     private PendingHandlerCallback pendingHandlerCallbackHead;
 
     /**
      * Set to {@code true} once the {@link AbstractChannel} is registered.Once set to {@code true} the value will never
      * change.
+     * TODO 1008 DefaultChannelPipeline 字段用途
      */
     private boolean registered;
 
     protected DefaultChannelPipeline(Channel channel) {
         this.channel = ObjectUtil.checkNotNull(channel, "channel");
+        // TODO 1008 DefaultChannelPipeline 字段用途
         succeededFuture = new SucceededChannelFuture(channel, null);
         voidPromise =  new VoidChannelPromise(channel, true);
 
+        // 创建 Tail 及诶点
         tail = new TailContext(this);
+        // 创建 Head 节点
         head = new HeadContext(this);
 
+        // 相互指向
         head.next = tail;
         tail.prev = head;
     }
@@ -202,15 +249,20 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     }
 
     @Override
+    @SuppressWarnings("Duplicates")
     public final ChannelPipeline addLast(EventExecutorGroup group, String name, ChannelHandler handler) {
         final AbstractChannelHandlerContext newCtx;
         synchronized (this) {
+            // 检查是否有重复 handler TODO 芋艿
             checkMultiplicity(handler);
 
+            // 创建节点
             newCtx = newContext(group, filterName(name, handler), handler);
 
+            // 添加节点
             addLast0(newCtx);
 
+            // TODO 芋艿，暂未注册到 EventLoop 中
             // If the registered is false it means that the channel was not registered on an eventloop yet.
             // In this case we add the context to the pipeline and add a task that will call
             // ChannelHandler.handlerAdded(...) once the channel is registered.
@@ -220,6 +272,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                 return this;
             }
 
+            // TODO 芋艿，不再 EventLoop 的线程中
             EventExecutor executor = newCtx.executor();
             if (!executor.inEventLoop()) {
                 newCtx.setAddPending();
@@ -232,6 +285,8 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                 return this;
             }
         }
+
+        // 回调用户方法 TODO
         callHandlerAdded0(newCtx);
         return this;
     }

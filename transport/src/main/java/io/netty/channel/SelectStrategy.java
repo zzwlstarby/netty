@@ -20,6 +20,8 @@ import io.netty.util.IntSupplier;
 /**
  * Select strategy interface.
  *
+ * 选择策略接口
+ *
  * Provides the ability to control the behavior of the select loop. For example a blocking select
  * operation can be delayed or skipped entirely if there are events to process immediately.
  */
@@ -27,10 +29,14 @@ public interface SelectStrategy {
 
     /**
      * Indicates a blocking select should follow.
+     *
+     * 表示使用阻塞 select 的策略。
      */
     int SELECT = -1;
     /**
      * Indicates the IO loop should be retried, no blocking select to follow directly.
+     *
+     * 表示需要进行重试的策略。
      */
     int CONTINUE = -2;
 
@@ -45,4 +51,5 @@ public interface SelectStrategy {
      *         again. Any value >= 0 is treated as an indicator that work needs to be done.
      */
     int calculateStrategy(IntSupplier selectSupplier, boolean hasTasks) throws Exception;
+
 }

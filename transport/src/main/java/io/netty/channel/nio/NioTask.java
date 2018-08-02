@@ -25,6 +25,7 @@ import java.nio.channels.Selector;
  * @see NioEventLoop#register(SelectableChannel, int, NioTask)
  */
 public interface NioTask<C extends SelectableChannel> {
+
     /**
      * Invoked when the {@link SelectableChannel} has been selected by the {@link Selector}.
      */
@@ -38,4 +39,5 @@ public interface NioTask<C extends SelectableChannel> {
      *              the event loop has been shut down.
      */
     void channelUnregistered(C ch, Throwable cause) throws Exception;
+
 }

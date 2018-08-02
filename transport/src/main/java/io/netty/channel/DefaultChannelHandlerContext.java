@@ -42,4 +42,5 @@ final class DefaultChannelHandlerContext extends AbstractChannelHandlerContext {
     private static boolean isOutbound(ChannelHandler handler) {
         return handler instanceof ChannelOutboundHandler;
     }
+
 }

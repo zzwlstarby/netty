@@ -19,9 +19,14 @@ import io.netty.util.IntSupplier;
 
 /**
  * Default select strategy.
+ *
+ * 默认选择策略实现类
  */
 final class DefaultSelectStrategy implements SelectStrategy {
 
+    /**
+     * 单例
+     */
     static final SelectStrategy INSTANCE = new DefaultSelectStrategy();
 
     private DefaultSelectStrategy() { }

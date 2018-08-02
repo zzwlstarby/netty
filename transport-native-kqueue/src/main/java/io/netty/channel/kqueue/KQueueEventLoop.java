@@ -171,8 +171,7 @@ final class KQueueEventLoop extends SingleThreadEventLoop {
             if (filter == Native.EVFILT_USER || (flags & Native.EV_ERROR) != 0) {
                 // EV_ERROR is returned if the FD is closed synchronously (which removes from kqueue) and then
                 // we later attempt to delete the filters from kqueue.
-                assert filter != Native.EVFILT_USER ||
-                        (filter == Native.EVFILT_USER && eventList.fd(i) == KQUEUE_WAKE_UP_IDENT);
+                assert filter != Native.EVFILT_USER || eventList.fd(i) == KQUEUE_WAKE_UP_IDENT;
                 continue;
             }
 
