@@ -1,4 +1,4 @@
-package io.netty.example.yunai;
+package io.netty.example.yunai.nio;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;

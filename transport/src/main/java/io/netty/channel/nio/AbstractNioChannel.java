@@ -63,7 +63,14 @@ public abstract class AbstractNioChannel extends AbstractChannel {
      */
     protected final int readInterestOp;
     volatile SelectionKey selectionKey;
+    /**
+     * TODO 芋艿
+     */
     boolean readPending;
+
+    /**
+     * 移除对“读”事件感兴趣的 Runnable 对象
+     */
     private final Runnable clearReadPendingRunnable = new Runnable() {
         @Override
         public void run() {
@@ -203,7 +210,9 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     }
 
     private void clearReadPending0() {
+        // TODO 芋艿
         readPending = false;
+        // 移除对“读”事件的感兴趣。
         ((AbstractNioUnsafe) unsafe()).removeReadOp();
     }
 
@@ -233,12 +242,14 @@ public abstract class AbstractNioChannel extends AbstractChannel {
 
         protected final void removeReadOp() {
             SelectionKey key = selectionKey();
+            // 忽略，如果 SelectionKey 不合法，例如已经取消
             // Check first if the key is still valid as it may be canceled as part of the deregistration
             // from the EventLoop
             // See https://github.com/netty/netty/issues/2104
             if (!key.isValid()) {
                 return;
             }
+            // 移除对“读”事件的感兴趣。
             int interestOps = key.interestOps();
             if ((interestOps & readInterestOp) != 0) {
                 // only remove readInterestOp if needed
@@ -404,7 +415,8 @@ public abstract class AbstractNioChannel extends AbstractChannel {
 
         private boolean isFlushPending() {
             SelectionKey selectionKey = selectionKey();
-            return selectionKey.isValid() && (selectionKey.interestOps() & SelectionKey.OP_WRITE) != 0;
+            return selectionKey.isValid() // 合法
+                    && (selectionKey.interestOps() & SelectionKey.OP_WRITE) != 0; // 对 SelectionKey.OP_WRITE 事件不感兴趣。
         }
     }
 
@@ -538,6 +550,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
 
     @Override
     protected void doClose() throws Exception {
+        // 通知 connectPromise 异常失败
         ChannelPromise promise = connectPromise;
         if (promise != null) {
             // Use tryFailure() instead of setFailure() to avoid the race against cancel().
@@ -545,10 +558,12 @@ public abstract class AbstractNioChannel extends AbstractChannel {
             connectPromise = null;
         }
 
+        // 取消 connectTimeoutFuture 等待
         ScheduledFuture<?> future = connectTimeoutFuture;
         if (future != null) {
             future.cancel(false);
             connectTimeoutFuture = null;
         }
     }
+
 }

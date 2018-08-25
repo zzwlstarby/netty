@@ -57,14 +57,20 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
 
     private final class NioMessageUnsafe extends AbstractNioUnsafe {
 
+        /**
+         * 新读取的客户端连接数组
+         */
         private final List<Object> readBuf = new ArrayList<Object>();
 
+        @SuppressWarnings("Duplicates")
         @Override
         public void read() {
             assert eventLoop().inEventLoop();
             final ChannelConfig config = config();
             final ChannelPipeline pipeline = pipeline();
+            // 获得 RecvByteBufAllocator.Handle 对象
             final RecvByteBufAllocator.Handle allocHandle = unsafe().recvBufAllocHandle();
+            // 重置 RecvByteBufAllocator.Handle 对象
             allocHandle.reset(config);
 
             boolean closed = false;
@@ -72,38 +78,54 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
             try {
                 try {
                     do {
+                        // 读取客户端的连接到 readBuf 中
                         int localRead = doReadMessages(readBuf);
+                        // 无可读取的客户端的连接，结束
                         if (localRead == 0) {
                             break;
                         }
+                        // 读取出错
                         if (localRead < 0) {
-                            closed = true;
+                            closed = true; // 标记关闭
                             break;
                         }
 
+                        // 读取消息数量 + localRead
                         allocHandle.incMessagesRead(localRead);
-                    } while (allocHandle.continueReading());
+                    } while (allocHandle.continueReading()); // 循环判断是否继续读取
                 } catch (Throwable t) {
+                    // 记录异常
                     exception = t;
                 }
 
+                // 循环 readBuf 数组，触发 Channel read 事件到 pipeline 中。
                 int size = readBuf.size();
                 for (int i = 0; i < size; i ++) {
+                    // TODO 芋艿
                     readPending = false;
+                    // 在内部，会通过 ServerBootstrapAcceptor ，将客户端的 Netty NioSocketChannel 注册到 EventLoop 上
                     pipeline.fireChannelRead(readBuf.get(i));
                 }
+                // 清空 readBuf 数组
                 readBuf.clear();
+                // 读取完成
                 allocHandle.readComplete();
+                // 触发 Channel readComplete 事件到 pipeline 中。
                 pipeline.fireChannelReadComplete();
 
+                // 发生异常
                 if (exception != null) {
+                    // 判断是否要关闭 TODO 芋艿
                     closed = closeOnReadError(exception);
 
+                    // 触发 exceptionCaught 事件到 pipeline 中。
                     pipeline.fireExceptionCaught(exception);
                 }
 
                 if (closed) {
+                    // TODO 芋艿
                     inputShutdown = true;
+                    // TODO 芋艿
                     if (isOpen()) {
                         close(voidPromise());
                     }
@@ -115,6 +137,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
                 // * The user called Channel.read() or ChannelHandlerContext.read() in channelReadComplete(...) method
                 //
                 // See https://github.com/netty/netty/issues/2254
+                // TODO 芋艿
                 if (!readPending && !config.isAutoRead()) {
                     removeReadOp();
                 }
@@ -182,7 +205,7 @@ public abstract class AbstractNioMessageChannel extends AbstractNioChannel {
         if (cause instanceof IOException) {
             // ServerChannel should not be closed even on IOException because it can often continue
             // accepting incoming connections. (e.g. too many open files)
-            return !(this instanceof ServerChannel);
+            return !(this instanceof ServerChannel); // io.netty.channel.ServerChannel
         }
         return true;
     }

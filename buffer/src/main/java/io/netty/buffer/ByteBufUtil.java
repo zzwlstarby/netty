@@ -70,10 +70,11 @@ public final class ByteBufUtil {
     static final ByteBufAllocator DEFAULT_ALLOCATOR;
 
     static {
-        String allocType = SystemPropertyUtil.get(
-                "io.netty.allocator.type", PlatformDependent.isAndroid() ? "unpooled" : "pooled");
+        // 读取 ByteBufAllocator 配置
+        String allocType = SystemPropertyUtil.get("io.netty.allocator.type", PlatformDependent.isAndroid() ? "unpooled" : "pooled");
         allocType = allocType.toLowerCase(Locale.US).trim();
 
+        // 读取 ByteBufAllocator 对象
         ByteBufAllocator alloc;
         if ("unpooled".equals(allocType)) {
             alloc = UnpooledByteBufAllocator.DEFAULT;
@@ -1133,6 +1134,9 @@ public final class ByteBufUtil {
 
     static final class ThreadLocalUnsafeDirectByteBuf extends UnpooledUnsafeDirectByteBuf {
 
+        /**
+         * Recycler 对象
+         */
         private static final Recycler<ThreadLocalUnsafeDirectByteBuf> RECYCLER =
                 new Recycler<ThreadLocalUnsafeDirectByteBuf>() {
                     @Override
@@ -1142,11 +1146,16 @@ public final class ByteBufUtil {
                 };
 
         static ThreadLocalUnsafeDirectByteBuf newInstance() {
+            // 从 RECYCLER 中，获得 ThreadLocalUnsafeDirectByteBuf 对象
             ThreadLocalUnsafeDirectByteBuf buf = RECYCLER.get();
+            // 初始化 ref 为 1
             buf.setRefCnt(1);
             return buf;
         }
 
+        /**
+         * Recycler 处理器
+         */
         private final Handle<ThreadLocalUnsafeDirectByteBuf> handle;
 
         private ThreadLocalUnsafeDirectByteBuf(Handle<ThreadLocalUnsafeDirectByteBuf> handle) {
@@ -1157,9 +1166,12 @@ public final class ByteBufUtil {
         @Override
         protected void deallocate() {
             if (capacity() > THREAD_LOCAL_BUFFER_SIZE) {
+                // 释放
                 super.deallocate();
             } else {
+                // 清空
                 clear();
+                // 回收对象
                 handle.recycle(this);
             }
         }
@@ -1167,6 +1179,9 @@ public final class ByteBufUtil {
 
     static final class ThreadLocalDirectByteBuf extends UnpooledDirectByteBuf {
 
+        /**
+         * Recycler 对象
+         */
         private static final Recycler<ThreadLocalDirectByteBuf> RECYCLER = new Recycler<ThreadLocalDirectByteBuf>() {
             @Override
             protected ThreadLocalDirectByteBuf newObject(Handle<ThreadLocalDirectByteBuf> handle) {
@@ -1175,11 +1190,16 @@ public final class ByteBufUtil {
         };
 
         static ThreadLocalDirectByteBuf newInstance() {
+            // 从 RECYCLER 中，获得 ThreadLocalUnsafeDirectByteBuf 对象
             ThreadLocalDirectByteBuf buf = RECYCLER.get();
+            // 初始化 ref 为 1
             buf.setRefCnt(1);
             return buf;
         }
 
+        /**
+         * Recycler 处理器
+         */
         private final Handle<ThreadLocalDirectByteBuf> handle;
 
         private ThreadLocalDirectByteBuf(Handle<ThreadLocalDirectByteBuf> handle) {
@@ -1190,12 +1210,16 @@ public final class ByteBufUtil {
         @Override
         protected void deallocate() {
             if (capacity() > THREAD_LOCAL_BUFFER_SIZE) {
+                // 释放
                 super.deallocate();
             } else {
+                // 清理
                 clear();
+                // 回收
                 handle.recycle(this);
             }
         }
+
     }
 
     /**

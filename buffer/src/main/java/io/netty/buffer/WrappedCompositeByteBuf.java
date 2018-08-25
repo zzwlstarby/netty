@@ -31,6 +31,9 @@ import java.util.List;
 
 class WrappedCompositeByteBuf extends CompositeByteBuf {
 
+    /**
+     * 被装饰的 ByteBuf 对象
+     */
     private final CompositeByteBuf wrapped;
 
     WrappedCompositeByteBuf(CompositeByteBuf wrapped) {

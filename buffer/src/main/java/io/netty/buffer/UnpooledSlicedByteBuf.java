@@ -20,6 +20,7 @@ package io.netty.buffer;
  * type {@link AbstractByteBuf}.
  */
 class UnpooledSlicedByteBuf extends AbstractUnpooledSlicedByteBuf {
+
     UnpooledSlicedByteBuf(AbstractByteBuf buffer, int index, int length) {
         super(buffer, index, length);
     }

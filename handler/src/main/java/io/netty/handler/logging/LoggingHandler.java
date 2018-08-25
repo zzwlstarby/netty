@@ -153,9 +153,11 @@ public class LoggingHandler extends ChannelDuplexHandler {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        // 打印日志
         if (logger.isEnabled(internalLevel)) {
             logger.log(internalLevel, format(ctx, "ACTIVE"));
         }
+        // 传递 Channel active 事件，给下一个节点
         ctx.fireChannelActive();
     }
 

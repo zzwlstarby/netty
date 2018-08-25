@@ -91,12 +91,42 @@ public final class EchoServer {
                 @Override
                 protected void initChannel(Channel ch) {
                     final ChannelPipeline pipeline = ch.pipeline();
-                    ch.eventLoop().execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            pipeline.addLast(new LoggingHandler(LogLevel.INFO));
-                        }
-                    });
+//                    ch.eventLoop().execute(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            pipeline.addLast(new LoggingHandler(LogLevel.INFO));
+//                        }
+//                    });
+                    pipeline.addLast(new LoggingHandler(LogLevel.INFO));
+//                    pipeline.addLast(new ChannelOutboundHandlerAdapter() {
+//
+//                        @Override
+//                        public void bind(ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) throws Exception {
+////                            super.bind(ctx, localAddress, promise);
+//                            if (true) {
+//                                throw new RuntimeException("测试异常");
+//                            }
+//
+//                        }
+//
+//                        @Override
+//                        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+//                            super.exceptionCaught(ctx, cause);
+//                        }
+//                    });
+
+//                    pipeline.addLast(new ChannelInboundHandlerAdapter() {
+//
+////                        @Override
+////                        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+////                            super.exceptionCaught(ctx, cause);
+////                        }
+//
+//                        @Override
+//                        public void channelActive(ChannelHandlerContext ctx) throws Exception {
+//                            throw new RuntimeException("测试异常");
+//                        }
+//                    });
                 }
 
             })
@@ -110,7 +140,12 @@ public final class EchoServer {
                      //p.addLast(new LoggingHandler(LogLevel.INFO));
                      p.addLast(serverHandler);
                  }
-             });
+             })
+
+            .childOption(ChannelOption.SO_SNDBUF, 5)
+            .childOption(ChannelOption.SO_LINGER, 100)
+
+            ;
 
             // Start the server.
             // 绑定端口，并同步等待成功，即启动服务端
@@ -127,6 +162,15 @@ public final class EchoServer {
                     System.out.println("执行定时任务");
                 }
             }, 5, TimeUnit.SECONDS);
+
+//            f.channel().writeAndFlush("123").addListener(new ChannelFutureListener() {
+//                @Override
+//                public void operationComplete(ChannelFuture future) throws Exception {
+//                    System.out.println("干啥呢");
+//                }
+//            });
+
+//            f.channel().close();
 
             // Wait until the server socket is closed.
             // 监听服务端关闭，并阻塞等待

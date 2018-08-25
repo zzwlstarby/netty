@@ -141,6 +141,7 @@ abstract class PoolArena<T> implements PoolArenaMetric {
 
     abstract boolean isDirect();
 
+    // TODO 芋艿 分配 direct 内存的流程。
     PooledByteBuf<T> allocate(PoolThreadCache cache, int reqCapacity, int maxCapacity) {
         PooledByteBuf<T> buf = newByteBuf(maxCapacity);
         allocate(cache, buf, reqCapacity);

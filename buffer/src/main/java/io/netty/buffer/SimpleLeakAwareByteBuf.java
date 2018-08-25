@@ -25,11 +25,16 @@ import java.nio.ByteOrder;
 class SimpleLeakAwareByteBuf extends WrappedByteBuf {
 
     /**
+     * 关联的 ByteBuf 对象
+     *
      * This object's is associated with the {@link ResourceLeakTracker}. When {@link ResourceLeakTracker#close(Object)}
      * is called this object will be used as the argument. It is also assumed that this object is used when
      * {@link ResourceLeakDetector#track(Object)} is called to create {@link #leak}.
      */
     private final ByteBuf trackedByteBuf;
+    /**
+     * ResourceLeakTracker 对象
+     */
     final ResourceLeakTracker<ByteBuf> leak;
 
     SimpleLeakAwareByteBuf(ByteBuf wrapped, ByteBuf trackedByteBuf, ResourceLeakTracker<ByteBuf> leak) {
@@ -99,7 +104,7 @@ class SimpleLeakAwareByteBuf extends WrappedByteBuf {
 
     @Override
     public boolean release() {
-        if (super.release()) {
+        if (super.release()) { // 释放完成
             closeLeak();
             return true;
         }
@@ -108,7 +113,7 @@ class SimpleLeakAwareByteBuf extends WrappedByteBuf {
 
     @Override
     public boolean release(int decrement) {
-        if (super.release(decrement)) {
+        if (super.release(decrement)) { // 释放完成
             closeLeak();
             return true;
         }
@@ -131,6 +136,7 @@ class SimpleLeakAwareByteBuf extends WrappedByteBuf {
         }
     }
 
+    // TODO 芋艿，看不懂 1017
     private ByteBuf unwrappedDerived(ByteBuf derived) {
         // We only need to unwrap SwappedByteBuf implementations as these will be the only ones that may end up in
         // the AbstractLeakAwareByteBuf implementations beside slices / duplicates and "real" buffers.
@@ -162,18 +168,16 @@ class SimpleLeakAwareByteBuf extends WrappedByteBuf {
         return buf;
     }
 
-    private SimpleLeakAwareByteBuf newSharedLeakAwareByteBuf(
-            ByteBuf wrapped) {
+    private SimpleLeakAwareByteBuf newSharedLeakAwareByteBuf(ByteBuf wrapped) {
         return newLeakAwareByteBuf(wrapped, trackedByteBuf, leak);
     }
 
-    private SimpleLeakAwareByteBuf newLeakAwareByteBuf(
-            ByteBuf wrapped, ResourceLeakTracker<ByteBuf> leakTracker) {
+    private SimpleLeakAwareByteBuf newLeakAwareByteBuf(ByteBuf wrapped, ResourceLeakTracker<ByteBuf> leakTracker) {
         return newLeakAwareByteBuf(wrapped, wrapped, leakTracker);
     }
 
-    protected SimpleLeakAwareByteBuf newLeakAwareByteBuf(
-            ByteBuf buf, ByteBuf trackedByteBuf, ResourceLeakTracker<ByteBuf> leakTracker) {
+    protected SimpleLeakAwareByteBuf newLeakAwareByteBuf(ByteBuf buf, ByteBuf trackedByteBuf, ResourceLeakTracker<ByteBuf> leakTracker) {
         return new SimpleLeakAwareByteBuf(buf, trackedByteBuf, leakTracker);
     }
+
 }

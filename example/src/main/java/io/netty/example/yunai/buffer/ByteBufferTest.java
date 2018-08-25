@@ -1,4 +1,4 @@
-package io.netty.example.yunai;
+package io.netty.example.yunai.buffer;
 
 import java.nio.ByteBuffer;
 

@@ -29,19 +29,25 @@ import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.ScatteringByteChannel;
 
 final class PooledUnsafeDirectByteBuf extends PooledByteBuf<ByteBuffer> {
+
     private static final Recycler<PooledUnsafeDirectByteBuf> RECYCLER = new Recycler<PooledUnsafeDirectByteBuf>() {
         @Override
         protected PooledUnsafeDirectByteBuf newObject(Handle<PooledUnsafeDirectByteBuf> handle) {
-            return new PooledUnsafeDirectByteBuf(handle, 0);
+            return new PooledUnsafeDirectByteBuf(handle, 0); // 真正创建 PooledUnsafeDirectByteBuf 对象
         }
     };
 
     static PooledUnsafeDirectByteBuf newInstance(int maxCapacity) {
+        // 从 Recycler 的对象池中获得 PooledUnsafeDirectByteBuf 对象
         PooledUnsafeDirectByteBuf buf = RECYCLER.get();
+        // 重置 PooledUnsafeDirectByteBuf 的属性
         buf.reuse(maxCapacity);
         return buf;
     }
 
+    /**
+     * 内存地址
+     */
     private long memoryAddress;
 
     private PooledUnsafeDirectByteBuf(Recycler.Handle<PooledUnsafeDirectByteBuf> recyclerHandle, int maxCapacity) {
@@ -51,13 +57,17 @@ final class PooledUnsafeDirectByteBuf extends PooledByteBuf<ByteBuffer> {
     @Override
     void init(PoolChunk<ByteBuffer> chunk, long handle, int offset, int length, int maxLength,
               PoolThreadCache cache) {
+        // 调用父初始化方法
         super.init(chunk, handle, offset, length, maxLength, cache);
+        // 初始化内存地址
         initMemoryAddress();
     }
 
     @Override
     void initUnpooled(PoolChunk<ByteBuffer> chunk, int length) {
+        // 调用父初始化方法
         super.initUnpooled(chunk, length);
+        // 初始化内存地址
         initMemoryAddress();
     }
 
@@ -322,7 +332,11 @@ final class PooledUnsafeDirectByteBuf extends PooledByteBuf<ByteBuffer> {
     @Override
     public ByteBuffer nioBuffer(int index, int length) {
         checkIndex(index, length);
+        // memory 中的开始位置
         index = idx(index);
+        // duplicate 复制一个 ByteBuffer 对象，共享数据
+        // position + limit 设置位置和大小限制
+        // slice 创建 [position, limit] 子缓冲区，共享数据
         return ((ByteBuffer) memory.duplicate().position(index).limit(index + length)).slice();
     }
 
@@ -365,7 +379,7 @@ final class PooledUnsafeDirectByteBuf extends PooledByteBuf<ByteBuffer> {
 
     @Override
     protected SwappedByteBuf newSwappedByteBuf() {
-        if (PlatformDependent.isUnaligned()) {
+        if (PlatformDependent.isUnaligned()) { // 支持
             // Only use if unaligned access is supported otherwise there is no gain.
             return new UnsafeDirectSwappedByteBuf(this);
         }

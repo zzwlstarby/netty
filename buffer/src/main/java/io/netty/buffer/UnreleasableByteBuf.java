@@ -23,6 +23,9 @@ import java.nio.ByteOrder;
  */
 final class UnreleasableByteBuf extends WrappedByteBuf {
 
+    /**
+     * SwappedByteBuf 对象的缓存
+     */
     private SwappedByteBuf swappedBuf;
 
     UnreleasableByteBuf(ByteBuf buf) {

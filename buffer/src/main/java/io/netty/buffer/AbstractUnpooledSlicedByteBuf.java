@@ -30,6 +30,7 @@ import java.nio.charset.Charset;
 import static io.netty.util.internal.MathUtil.isOutOfBounds;
 
 abstract class AbstractUnpooledSlicedByteBuf extends AbstractDerivedByteBuf {
+
     private final ByteBuf buffer;
     private final int adjustment;
 

@@ -28,15 +28,20 @@ import java.nio.channels.ScatteringByteChannel;
 
 class PooledHeapByteBuf extends PooledByteBuf<byte[]> {
 
+    /**
+     * Recycler 对象
+     */
     private static final Recycler<PooledHeapByteBuf> RECYCLER = new Recycler<PooledHeapByteBuf>() {
         @Override
         protected PooledHeapByteBuf newObject(Handle<PooledHeapByteBuf> handle) {
-            return new PooledHeapByteBuf(handle, 0);
+            return new PooledHeapByteBuf(handle, 0); // 真正创建 PooledHeapByteBuf 对象
         }
     };
 
     static PooledHeapByteBuf newInstance(int maxCapacity) {
+        // 从 Recycler 的对象池中获得 PooledHeapByteBuf 对象
         PooledHeapByteBuf buf = RECYCLER.get();
+        // 重置 PooledDirectByteBuf 的属性
         buf.reuse(maxCapacity);
         return buf;
     }
@@ -277,8 +282,11 @@ class PooledHeapByteBuf extends PooledByteBuf<byte[]> {
 
     @Override
     public final ByteBuf copy(int index, int length) {
+        // 校验索引
         checkIndex(index, length);
+        // 创建一个 Heap ByteBuf 对象
         ByteBuf copy = alloc().heapBuffer(length, maxCapacity());
+        // 写入数据
         copy.writeBytes(memory, idx(index), length);
         return copy;
     }
@@ -296,8 +304,11 @@ class PooledHeapByteBuf extends PooledByteBuf<byte[]> {
     @Override
     public final ByteBuffer nioBuffer(int index, int length) {
         checkIndex(index, length);
+        // memory 中的开始位置
         index = idx(index);
+        // 创建 ByteBuffer 对象
         ByteBuffer buf =  ByteBuffer.wrap(memory, index, length);
+        // slice 创建 [position, limit] 子缓冲区
         return buf.slice();
     }
 
@@ -338,4 +349,5 @@ class PooledHeapByteBuf extends PooledByteBuf<byte[]> {
     protected final ByteBuffer newInternalNioBuffer(byte[] memory) {
         return ByteBuffer.wrap(memory);
     }
+
 }

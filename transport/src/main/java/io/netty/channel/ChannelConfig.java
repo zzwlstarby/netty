@@ -263,4 +263,5 @@ public interface ChannelConfig {
      * water mark of the write buffer.
      */
     ChannelConfig setWriteBufferWaterMark(WriteBufferWaterMark writeBufferWaterMark);
+
 }

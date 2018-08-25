@@ -36,6 +36,9 @@ import java.nio.charset.Charset;
 final class AdvancedLeakAwareByteBuf extends SimpleLeakAwareByteBuf {
 
     private static final String PROP_ACQUIRE_AND_RELEASE_ONLY = "io.netty.leakDetection.acquireAndReleaseOnly";
+    /**
+     * 默认为
+     */
     private static final boolean ACQUIRE_AND_RELEASE_ONLY;
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AdvancedLeakAwareByteBuf.class);
@@ -47,8 +50,7 @@ final class AdvancedLeakAwareByteBuf extends SimpleLeakAwareByteBuf {
             logger.debug("-D{}: {}", PROP_ACQUIRE_AND_RELEASE_ONLY, ACQUIRE_AND_RELEASE_ONLY);
         }
 
-        ResourceLeakDetector.addExclusions(
-                AdvancedLeakAwareByteBuf.class, "touch", "recordLeakNonRefCountingOperation");
+        ResourceLeakDetector.addExclusions(AdvancedLeakAwareByteBuf.class, "touch", "recordLeakNonRefCountingOperation");
     }
 
     AdvancedLeakAwareByteBuf(ByteBuf buf, ResourceLeakTracker<ByteBuf> leak) {
@@ -964,4 +966,5 @@ final class AdvancedLeakAwareByteBuf extends SimpleLeakAwareByteBuf {
             ByteBuf buf, ByteBuf trackedByteBuf, ResourceLeakTracker<ByteBuf> leakTracker) {
         return new AdvancedLeakAwareByteBuf(buf, trackedByteBuf, leakTracker);
     }
+
 }

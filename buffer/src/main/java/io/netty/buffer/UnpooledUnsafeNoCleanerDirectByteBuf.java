@@ -27,6 +27,7 @@ class UnpooledUnsafeNoCleanerDirectByteBuf extends UnpooledUnsafeDirectByteBuf {
 
     @Override
     protected ByteBuffer allocateDirect(int initialCapacity) {
+        // 反射，直接创建 ByteBuffer 对象。并且该对象不带 Cleaner 对象
         return PlatformDependent.allocateDirectNoCleaner(initialCapacity);
     }
 
@@ -36,6 +37,7 @@ class UnpooledUnsafeNoCleanerDirectByteBuf extends UnpooledUnsafeDirectByteBuf {
 
     @Override
     protected void freeDirect(ByteBuffer buffer) {
+        // 直接释放 ByteBuffer 对象
         PlatformDependent.freeDirectNoCleaner(buffer);
     }
 
@@ -48,18 +50,24 @@ class UnpooledUnsafeNoCleanerDirectByteBuf extends UnpooledUnsafeDirectByteBuf {
             return this;
         }
 
+        // 重新分配 ByteBuf 对象
         ByteBuffer newBuffer = reallocateDirect(buffer, newCapacity);
 
         if (newCapacity < oldCapacity) {
             if (readerIndex() < newCapacity) {
+                // 重置 writerIndex 为 newCapacity ，避免越界
                 if (writerIndex() > newCapacity) {
                     writerIndex(newCapacity);
                 }
             } else {
+                // 重置 writerIndex 和 readerIndex 为 newCapacity ，避免越界
                 setIndex(newCapacity, newCapacity);
             }
         }
+
+        // 设置 ByteBuf 对象
         setByteBuffer(newBuffer, false);
         return this;
     }
+
 }

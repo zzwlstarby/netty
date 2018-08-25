@@ -20,6 +20,7 @@ package io.netty.buffer;
  * is of type {@link AbstractByteBuf}.
  */
 class UnpooledDuplicatedByteBuf extends DuplicatedByteBuf {
+
     UnpooledDuplicatedByteBuf(AbstractByteBuf buffer) {
         super(buffer);
     }
