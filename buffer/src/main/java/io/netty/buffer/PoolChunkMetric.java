@@ -34,4 +34,5 @@ public interface PoolChunkMetric {
      * Return the number of free bytes in the chunk.
      */
     int freeBytes();
+
 }

@@ -49,23 +49,56 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
      * 默认配置，8192 B = 8 KB
      */
     private static final int DEFAULT_PAGE_SIZE;
+    /**
+     * {@link PoolChunk} 满二叉树的高度，默认为 11 。
+     */
     private static final int DEFAULT_MAX_ORDER; // 8192 << 11 = 16 MiB per chunk
+    /**
+     * 默认 {@link PoolThreadCache} 的 tiny 类型的内存块的缓存数量。默认为 512 。
+     *
+     * @see #tinyCacheSize
+     */
     private static final int DEFAULT_TINY_CACHE_SIZE;
+    /**
+     * 默认 {@link PoolThreadCache} 的 small 类型的内存块的缓存数量。默认为 256 。
+     *
+     * @see #smallCacheSize
+     */
     private static final int DEFAULT_SMALL_CACHE_SIZE;
+    /**
+     * 默认 {@link PoolThreadCache} 的 normal 类型的内存块的缓存数量。默认为 64 。
+     *
+     * @see #normalCacheSize
+     */
     private static final int DEFAULT_NORMAL_CACHE_SIZE;
+    /**
+     * 默认 {@link PoolThreadCache} TODO 1013 PoolThreadCache
+     */
     private static final int DEFAULT_MAX_CACHED_BUFFER_CAPACITY;
+    /**
+     *
+     */
     private static final int DEFAULT_CACHE_TRIM_INTERVAL;
+    /**
+     *
+     */
     private static final boolean DEFAULT_USE_CACHE_FOR_ALL_THREADS;
+    /**
+     *
+     */
     private static final int DEFAULT_DIRECT_MEMORY_CACHE_ALIGNMENT;
 
     /**
-     * Page 的内存最小值
+     * Page 的内存最小值。默认为 4KB = 4096B
      */
     private static final int MIN_PAGE_SIZE = 4096;
+    /**
+     * Chunk 的内存最大值。默认为 1GB
+     */
     private static final int MAX_CHUNK_SIZE = (int) (((long) Integer.MAX_VALUE + 1) / 2);
 
     static {
-        // 初始化 Page 的内存大小
+        // 初始化 DEFAULT_PAGE_SIZE
         int defaultPageSize = SystemPropertyUtil.getInt("io.netty.allocator.pageSize", 8192);
         Throwable pageSizeFallbackCause = null;
         try {
@@ -76,7 +109,7 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
         }
         DEFAULT_PAGE_SIZE = defaultPageSize;
 
-        // TODO 芋艿，怎么注释好。
+        // 初始化 DEFAULT_MAX_ORDER
         int defaultMaxOrder = SystemPropertyUtil.getInt("io.netty.allocator.maxOrder", 11);
         Throwable maxOrderFallbackCause = null;
         try {
@@ -171,10 +204,25 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
     private final int tinyCacheSize;
     private final int smallCacheSize;
     private final int normalCacheSize;
+    /**
+     * PoolArenaMetric 数组
+     */
     private final List<PoolArenaMetric> heapArenaMetrics;
+    /**
+     * PoolArenaMetric 数组
+     */
     private final List<PoolArenaMetric> directArenaMetrics;
+    /**
+     * 线程变量，用于获得 PoolThreadCache 对象。
+     */
     private final PoolThreadLocalCache threadCache;
+    /**
+     * Chunk 大小
+     */
     private final int chunkSize;
+    /**
+     * PooledByteBufAllocatorMetric 对象
+     */
     private final PooledByteBufAllocatorMetric metric;
 
     public PooledByteBufAllocator() {
@@ -296,11 +344,12 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
         if (pageSize < MIN_PAGE_SIZE) {
             throw new IllegalArgumentException("pageSize: " + pageSize + " (expected: " + MIN_PAGE_SIZE + ")");
         }
-        // 校验 Page 的内存代销，必须是 2 的指数级
+        // 校验 Page 的内存大小，必须是 2 的指数级
         if ((pageSize & pageSize - 1) != 0) {
             throw new IllegalArgumentException("pageSize: " + pageSize + " (expected: power of 2)");
         }
 
+        // 计算 pageShift
         // Logarithm base 2. At this point we know that pageSize is a power of two.
         return Integer.SIZE - 1 - Integer.numberOfLeadingZeros(pageSize);
     }
@@ -449,6 +498,7 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
     }
 
     final class PoolThreadLocalCache extends FastThreadLocal<PoolThreadCache> {
+
         private final boolean useCacheForAllThreads;
 
         PoolThreadLocalCache(boolean useCacheForAllThreads) {
@@ -476,11 +526,14 @@ public class PooledByteBufAllocator extends AbstractByteBufAllocator implements 
         }
 
         private <T> PoolArena<T> leastUsedArena(PoolArena<T>[] arenas) {
+            // 一个都没有，返回 null
             if (arenas == null || arenas.length == 0) {
                 return null;
             }
 
+            // 获得第零个 PoolArena 对象
             PoolArena<T> minArena = arenas[0];
+            // 比较后面的 PoolArena 对象，选择
             for (int i = 1; i < arenas.length; i++) {
                 PoolArena<T> arena = arenas[i];
                 if (arena.numThreadCaches.get() < minArena.numThreadCaches.get()) {

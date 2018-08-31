@@ -39,7 +39,7 @@ abstract class PooledByteBuf<T> extends AbstractReferenceCountedByteBuf {
      */
     protected PoolChunk<T> chunk;
     /**
-     * TODO 1013 Chunk
+     * 从 Chunk 对象中分配的内存块所处的位置
      */
     protected long handle;
     /**
@@ -153,7 +153,7 @@ abstract class PooledByteBuf<T> extends AbstractReferenceCountedByteBuf {
                 // 大于 maxLength 的一半
                 if (newCapacity > maxLength >>> 1) {
                     if (maxLength <= 512) {
-                        // 因为 Netty SubPage 最小是 16 ，如果小于等 16 ，无法缩容。
+                        // 因为 Netty Subpage 最小是 16 ，如果小于等 16 ，无法缩容。
                         if (newCapacity > maxLength - 16) {
                             length = newCapacity;
                             // 设置读写索引，避免超过最大容量

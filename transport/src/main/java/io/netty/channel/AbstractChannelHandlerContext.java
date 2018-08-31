@@ -883,7 +883,7 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
     private void write(Object msg, boolean flush, ChannelPromise promise) {
         // 获得下一个 Outbound 节点
         AbstractChannelHandlerContext next = findContextOutbound();
-        // TODO 1011 touch
+        // 记录 Record 记录
         final Object m = pipeline.touch(msg, next);
         EventExecutor executor = next.executor();
         // 在 EventLoop 的线程中

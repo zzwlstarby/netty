@@ -32,12 +32,10 @@ public interface PoolArenaMetric {
      * Returns the number of tiny sub-pages for the arena.
      */
     int numTinySubpages();
-
     /**
      * Returns the number of small sub-pages for the arena.
      */
     int numSmallSubpages();
-
     /**
      * Returns the number of chunk lists for the arena.
      */
@@ -47,12 +45,10 @@ public interface PoolArenaMetric {
      * Returns an unmodifiable {@link List} which holds {@link PoolSubpageMetric}s for tiny sub-pages.
      */
     List<PoolSubpageMetric> tinySubpages();
-
     /**
      * Returns an unmodifiable {@link List} which holds {@link PoolSubpageMetric}s for small sub-pages.
      */
     List<PoolSubpageMetric> smallSubpages();
-
     /**
      * Returns an unmodifiable {@link List} which holds {@link PoolChunkListMetric}s.
      */
@@ -62,22 +58,18 @@ public interface PoolArenaMetric {
      * Return the number of allocations done via the arena. This includes all sizes.
      */
     long numAllocations();
-
     /**
      * Return the number of tiny allocations done via the arena.
      */
     long numTinyAllocations();
-
     /**
      * Return the number of small allocations done via the arena.
      */
     long numSmallAllocations();
-
     /**
      * Return the number of normal allocations done via the arena.
      */
     long numNormalAllocations();
-
     /**
      * Return the number of huge allocations done via the arena.
      */
@@ -87,22 +79,18 @@ public interface PoolArenaMetric {
      * Return the number of deallocations done via the arena. This includes all sizes.
      */
     long numDeallocations();
-
     /**
      * Return the number of tiny deallocations done via the arena.
      */
     long numTinyDeallocations();
-
     /**
      * Return the number of small deallocations done via the arena.
      */
     long numSmallDeallocations();
-
     /**
      * Return the number of normal deallocations done via the arena.
      */
     long numNormalDeallocations();
-
     /**
      * Return the number of huge deallocations done via the arena.
      */
@@ -117,17 +105,14 @@ public interface PoolArenaMetric {
      * Return the number of currently active tiny allocations.
      */
     long numActiveTinyAllocations();
-
     /**
      * Return the number of currently active small allocations.
      */
     long numActiveSmallAllocations();
-
     /**
      * Return the number of currently active normal allocations.
      */
     long numActiveNormalAllocations();
-
     /**
      * Return the number of currently active huge allocations.
      */
