@@ -33,8 +33,7 @@ public class ChannelDuplexHandler extends ChannelInboundHandlerAdapter implement
      * Sub-classes may override this method to change behavior.
      */
     @Override
-    public void bind(ChannelHandlerContext ctx, SocketAddress localAddress,
-                     ChannelPromise promise) throws Exception {
+    public void bind(ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) throws Exception {
         ctx.bind(localAddress, promise);
     }
 
@@ -45,8 +44,7 @@ public class ChannelDuplexHandler extends ChannelInboundHandlerAdapter implement
      * Sub-classes may override this method to change behavior.
      */
     @Override
-    public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress,
-                        SocketAddress localAddress, ChannelPromise promise) throws Exception {
+    public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress, ChannelPromise promise) throws Exception {
         ctx.connect(remoteAddress, localAddress, promise);
     }
 
@@ -57,8 +55,7 @@ public class ChannelDuplexHandler extends ChannelInboundHandlerAdapter implement
      * Sub-classes may override this method to change behavior.
      */
     @Override
-    public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise)
-            throws Exception {
+    public void disconnect(ChannelHandlerContext ctx, ChannelPromise promise) throws Exception {
         ctx.disconnect(promise);
     }
 
@@ -116,4 +113,5 @@ public class ChannelDuplexHandler extends ChannelInboundHandlerAdapter implement
     public void flush(ChannelHandlerContext ctx) throws Exception {
         ctx.flush();
     }
+
 }

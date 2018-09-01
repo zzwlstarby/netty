@@ -85,51 +85,51 @@ public final class EchoServer {
             b.group(bossGroup, workerGroup) // 设置使用的 EventLoopGroup
              .channel(NioServerSocketChannel.class) // 设置要被实例化的为 NioServerSocketChannel 类
              .option(ChannelOption.SO_BACKLOG, 100) // 设置 NioServerSocketChannel 的可选项
-//             .handler(new LoggingHandler(LogLevel.INFO)) // 设置 NioServerSocketChannel 的处理器
-            .handler(new ChannelInitializer<Channel>() {
-
-                @Override
-                protected void initChannel(Channel ch) {
-                    final ChannelPipeline pipeline = ch.pipeline();
-//                    ch.eventLoop().execute(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            pipeline.addLast(new LoggingHandler(LogLevel.INFO));
-//                        }
-//                    });
-                    pipeline.addLast(new LoggingHandler(LogLevel.INFO));
-//                    pipeline.addLast(new ChannelOutboundHandlerAdapter() {
+             .handler(new LoggingHandler(LogLevel.INFO)) // 设置 NioServerSocketChannel 的处理器
+//            .handler(new ChannelInitializer<Channel>() {
 //
-//                        @Override
-//                        public void bind(ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) throws Exception {
-////                            super.bind(ctx, localAddress, promise);
-//                            if (true) {
-//                                throw new RuntimeException("测试异常");
-//                            }
-//
-//                        }
-//
-//                        @Override
-//                        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-//                            super.exceptionCaught(ctx, cause);
-//                        }
-//                    });
-
-//                    pipeline.addLast(new ChannelInboundHandlerAdapter() {
-//
+//                @Override
+//                protected void initChannel(Channel ch) {
+//                    final ChannelPipeline pipeline = ch.pipeline();
+////                    ch.eventLoop().execute(new Runnable() {
+////                        @Override
+////                        public void run() {
+////                            pipeline.addLast(new LoggingHandler(LogLevel.INFO));
+////                        }
+////                    });
+//                    pipeline.addLast(new LoggingHandler(LogLevel.INFO));
+////                    pipeline.addLast(new ChannelOutboundHandlerAdapter() {
+////
+////                        @Override
+////                        public void bind(ChannelHandlerContext ctx, SocketAddress localAddress, ChannelPromise promise) throws Exception {
+//////                            super.bind(ctx, localAddress, promise);
+////                            if (true) {
+////                                throw new RuntimeException("测试异常");
+////                            }
+////
+////                        }
+////
 ////                        @Override
 ////                        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
 ////                            super.exceptionCaught(ctx, cause);
 ////                        }
+////                    });
 //
-//                        @Override
-//                        public void channelActive(ChannelHandlerContext ctx) throws Exception {
-//                            throw new RuntimeException("测试异常");
-//                        }
-//                    });
-                }
-
-            })
+////                    pipeline.addLast(new ChannelInboundHandlerAdapter() {
+////
+//////                        @Override
+//////                        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+//////                            super.exceptionCaught(ctx, cause);
+//////                        }
+////
+////                        @Override
+////                        public void channelActive(ChannelHandlerContext ctx) throws Exception {
+////                            throw new RuntimeException("测试异常");
+////                        }
+////                    });
+//                }
+//
+//            })
              .childHandler(new ChannelInitializer<SocketChannel>() {
                  @Override
                  public void initChannel(SocketChannel ch) throws Exception { // 设置连入服务端的 Client 的 SocketChannel 的处理器

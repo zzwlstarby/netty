@@ -130,4 +130,5 @@ public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implemen
             throws Exception {
         ctx.fireExceptionCaught(cause);
     }
+
 }

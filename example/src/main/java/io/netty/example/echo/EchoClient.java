@@ -79,7 +79,7 @@ public final class EchoClient {
                 public void operationComplete(ChannelFuture future) throws Exception {
                     System.out.println("连接完成");
 
-                    f.channel().disconnect();
+//                    f.channel().disconnect();
 
 //                    channel.close();throw new RuntimeException("抛出异常");
                 }
