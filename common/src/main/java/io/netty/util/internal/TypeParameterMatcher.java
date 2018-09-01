@@ -150,6 +150,10 @@ public abstract class TypeParameterMatcher {
     public abstract boolean match(Object msg);
 
     private static final class ReflectiveMatcher extends TypeParameterMatcher {
+
+        /**
+         * 类型
+         */
         private final Class<?> type;
 
         ReflectiveMatcher(Class<?> type) {
@@ -158,8 +162,9 @@ public abstract class TypeParameterMatcher {
 
         @Override
         public boolean match(Object msg) {
-            return type.isInstance(msg);
+            return type.isInstance(msg); //
         }
+
     }
 
     TypeParameterMatcher() { }
