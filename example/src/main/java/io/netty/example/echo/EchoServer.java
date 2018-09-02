@@ -25,6 +25,7 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
+import io.netty.handler.timeout.IdleStateHandler;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
@@ -86,6 +87,7 @@ public final class EchoServer {
              .channel(NioServerSocketChannel.class) // 设置要被实例化的为 NioServerSocketChannel 类
              .option(ChannelOption.SO_BACKLOG, 100) // 设置 NioServerSocketChannel 的可选项
              .handler(new LoggingHandler(LogLevel.INFO)) // 设置 NioServerSocketChannel 的处理器
+//                .handler(new IdleStateHandler(0, 1, 0, TimeUnit.SECONDS))
 //            .handler(new ChannelInitializer<Channel>() {
 //
 //                @Override
@@ -137,6 +139,9 @@ public final class EchoServer {
                      if (sslCtx != null) {
                          p.addLast(sslCtx.newHandler(ch.alloc()));
                      }
+
+                     p.addLast(new IdleStateHandler(0, 1, 0, TimeUnit.SECONDS));
+
                      //p.addLast(new LoggingHandler(LogLevel.INFO));
                      p.addLast(serverHandler);
                  }

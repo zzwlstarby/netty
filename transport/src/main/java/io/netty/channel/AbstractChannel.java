@@ -458,6 +458,9 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
          * 内存队列
          */
         private volatile ChannelOutboundBuffer outboundBuffer = new ChannelOutboundBuffer(AbstractChannel.this);
+        /**
+         * TODO 芋艿
+         */
         private RecvByteBufAllocator.Handle recvHandle;
         /**
          * 是否正在 flush 中，即正在调用 {@link #flush0()} 中

@@ -40,11 +40,23 @@ import static io.netty.util.internal.StringUtil.NEWLINE;
 @SuppressWarnings({ "StringConcatenationInsideStringBufferAppend", "StringBufferReplaceableByString" })
 public class LoggingHandler extends ChannelDuplexHandler {
 
+    /**
+     * 默认 {@link #level} 日志级别
+     */
     private static final LogLevel DEFAULT_LEVEL = LogLevel.DEBUG;
 
+    /**
+     * Netty 内部 Logger 对象
+     */
     protected final InternalLogger logger;
+    /**
+     * Netty 内部 LogLevel 级别
+     */
     protected final InternalLogLevel internalLevel;
 
+    /**
+     * 配置的 LogLevel 级别
+     */
     private final LogLevel level;
 
     /**
@@ -66,6 +78,7 @@ public class LoggingHandler extends ChannelDuplexHandler {
             throw new NullPointerException("level");
         }
 
+        // 获得 logger
         logger = InternalLoggerFactory.getInstance(getClass());
         this.level = level;
         internalLevel = level.toInternalLevel();
@@ -95,6 +108,7 @@ public class LoggingHandler extends ChannelDuplexHandler {
             throw new NullPointerException("level");
         }
 
+        // 获得 logger
         logger = InternalLoggerFactory.getInstance(clazz);
         this.level = level;
         internalLevel = level.toInternalLevel();
@@ -123,6 +137,7 @@ public class LoggingHandler extends ChannelDuplexHandler {
             throw new NullPointerException("level");
         }
 
+        // 获得 logger
         logger = InternalLoggerFactory.getInstance(name);
         this.level = level;
         internalLevel = level.toInternalLevel();
@@ -140,6 +155,7 @@ public class LoggingHandler extends ChannelDuplexHandler {
         if (logger.isEnabled(internalLevel)) {
             logger.log(internalLevel, format(ctx, "REGISTERED"));
         }
+        //
         ctx.fireChannelRegistered();
     }
 
@@ -354,11 +370,9 @@ public class LoggingHandler extends ChannelDuplexHandler {
             return buf.toString();
         } else {
             int rows = length / 16 + (length % 15 == 0? 0 : 1) + 4;
-            StringBuilder buf = new StringBuilder(
-                    chStr.length() + 1 + eventName.length() + 2 + msgStr.length() + 2 + 10 + 1 + 2 + rows * 80);
+            StringBuilder buf = new StringBuilder(chStr.length() + 1 + eventName.length() + 2 + msgStr.length() + 2 + 10 + 1 + 2 + rows * 80);
 
-            buf.append(chStr).append(' ').append(eventName).append(": ")
-               .append(msgStr).append(", ").append(length).append('B').append(NEWLINE);
+            buf.append(chStr).append(' ').append(eventName).append(": ").append(msgStr).append(", ").append(length).append('B').append(NEWLINE);
             appendPrettyHexDump(buf, content);
 
             return buf.toString();
@@ -374,4 +388,5 @@ public class LoggingHandler extends ChannelDuplexHandler {
         StringBuilder buf = new StringBuilder(chStr.length() + 1 + eventName.length() + 2 + msgStr.length());
         return buf.append(chStr).append(' ').append(eventName).append(": ").append(msgStr).toString();
     }
+
 }

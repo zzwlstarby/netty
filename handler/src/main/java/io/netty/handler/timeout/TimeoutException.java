@@ -31,4 +31,5 @@ public class TimeoutException extends ChannelException {
     public Throwable fillInStackTrace() {
         return this;
     }
+
 }

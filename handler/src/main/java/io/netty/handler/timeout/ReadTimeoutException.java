@@ -23,7 +23,11 @@ public final class ReadTimeoutException extends TimeoutException {
 
     private static final long serialVersionUID = 169287984113283421L;
 
+    /**
+     * 单例
+     */
     public static final ReadTimeoutException INSTANCE = new ReadTimeoutException();
 
     private ReadTimeoutException() { }
+
 }
