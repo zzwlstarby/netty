@@ -38,6 +38,9 @@ import java.util.List;
  */
 public class FixedLengthFrameDecoder extends ByteToMessageDecoder {
 
+    /**
+     * 固定长度
+     */
     private final int frameLength;
 
     /**
@@ -47,15 +50,16 @@ public class FixedLengthFrameDecoder extends ByteToMessageDecoder {
      */
     public FixedLengthFrameDecoder(int frameLength) {
         if (frameLength <= 0) {
-            throw new IllegalArgumentException(
-                    "frameLength must be a positive integer: " + frameLength);
+            throw new IllegalArgumentException("frameLength must be a positive integer: " + frameLength);
         }
         this.frameLength = frameLength;
     }
 
     @Override
     protected final void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+        // 解码消息
         Object decoded = decode(ctx, in);
+        // 添加到 out 结果中
         if (decoded != null) {
             out.add(decoded);
         }
@@ -69,12 +73,14 @@ public class FixedLengthFrameDecoder extends ByteToMessageDecoder {
      * @return  frame           the {@link ByteBuf} which represent the frame or {@code null} if no frame could
      *                          be created.
      */
-    protected Object decode(
-            @SuppressWarnings("UnusedParameters") ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+    protected Object decode(@SuppressWarnings("UnusedParameters") ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+        // 可读字节不够 frameLength 长度，无法解码出消息。
         if (in.readableBytes() < frameLength) {
             return null;
+        // 可读字节足够 frameLength 长度，解码出一条消息。
         } else {
             return in.readRetainedSlice(frameLength);
         }
     }
+
 }

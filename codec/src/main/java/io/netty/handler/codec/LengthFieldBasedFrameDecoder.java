@@ -15,12 +15,12 @@
  */
 package io.netty.handler.codec;
 
-import java.nio.ByteOrder;
-import java.util.List;
-
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.serialization.ObjectDecoder;
+
+import java.nio.ByteOrder;
+import java.util.List;
 
 /**
  * A decoder that splits the received {@link ByteBuf}s dynamically by the
@@ -391,9 +391,7 @@ public class LengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
                                                                      long frameLength,
                                                                      int initialBytesToStrip) {
         in.skipBytes((int) frameLength);
-        throw new CorruptedFrameException(
-           "Adjusted frame length (" + frameLength + ") is less " +
-              "than initialBytesToStrip: " + initialBytesToStrip);
+        throw new CorruptedFrameException("Adjusted frame length (" + frameLength + ") is less " + "than initialBytesToStrip: " + initialBytesToStrip);
     }
 
     /**
@@ -519,13 +517,9 @@ public class LengthFieldBasedFrameDecoder extends ByteToMessageDecoder {
 
     private void fail(long frameLength) {
         if (frameLength > 0) {
-            throw new TooLongFrameException(
-                            "Adjusted frame length exceeds " + maxFrameLength +
-                            ": " + frameLength + " - discarded");
+            throw new TooLongFrameException("Adjusted frame length exceeds " + maxFrameLength + ": " + frameLength + " - discarded");
         } else {
-            throw new TooLongFrameException(
-                            "Adjusted frame length exceeds " + maxFrameLength +
-                            " - discarding");
+            throw new TooLongFrameException("Adjusted frame length exceeds " + maxFrameLength + " - discarding");
         }
     }
 }

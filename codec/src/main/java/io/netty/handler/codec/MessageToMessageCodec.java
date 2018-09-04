@@ -54,6 +54,9 @@ import java.util.List;
  */
 public abstract class MessageToMessageCodec<INBOUND_IN, OUTBOUND_IN> extends ChannelDuplexHandler {
 
+    /**
+     * Encoder 对象
+     */
     private final MessageToMessageEncoder<Object> encoder = new MessageToMessageEncoder<Object>() {
 
         @Override
@@ -68,6 +71,9 @@ public abstract class MessageToMessageCodec<INBOUND_IN, OUTBOUND_IN> extends Cha
         }
     };
 
+    /**
+     * Decoder 对象
+     */
     private final MessageToMessageDecoder<Object> decoder = new MessageToMessageDecoder<Object>() {
 
         @Override
@@ -82,7 +88,13 @@ public abstract class MessageToMessageCodec<INBOUND_IN, OUTBOUND_IN> extends Cha
         }
     };
 
+    /**
+     * Decoder 的类型匹配器
+     */
     private final TypeParameterMatcher inboundMsgMatcher;
+    /**
+     * Encoder 的类型匹配器
+     */
     private final TypeParameterMatcher outboundMsgMatcher;
 
     /**
@@ -100,8 +112,7 @@ public abstract class MessageToMessageCodec<INBOUND_IN, OUTBOUND_IN> extends Cha
      * @param inboundMessageType    The type of messages to decode
      * @param outboundMessageType   The type of messages to encode
      */
-    protected MessageToMessageCodec(
-            Class<? extends INBOUND_IN> inboundMessageType, Class<? extends OUTBOUND_IN> outboundMessageType) {
+    protected MessageToMessageCodec(Class<? extends INBOUND_IN> inboundMessageType, Class<? extends OUTBOUND_IN> outboundMessageType) {
         inboundMsgMatcher = TypeParameterMatcher.get(inboundMessageType);
         outboundMsgMatcher = TypeParameterMatcher.get(outboundMessageType);
     }
@@ -137,12 +148,11 @@ public abstract class MessageToMessageCodec<INBOUND_IN, OUTBOUND_IN> extends Cha
     /**
      * @see MessageToMessageEncoder#encode(ChannelHandlerContext, Object, List)
      */
-    protected abstract void encode(ChannelHandlerContext ctx, OUTBOUND_IN msg, List<Object> out)
-            throws Exception;
+    protected abstract void encode(ChannelHandlerContext ctx, OUTBOUND_IN msg, List<Object> out) throws Exception;
 
     /**
      * @see MessageToMessageDecoder#decode(ChannelHandlerContext, Object, List)
      */
-    protected abstract void decode(ChannelHandlerContext ctx, INBOUND_IN msg, List<Object> out)
-            throws Exception;
+    protected abstract void decode(ChannelHandlerContext ctx, INBOUND_IN msg, List<Object> out) throws Exception;
+
 }

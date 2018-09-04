@@ -30,6 +30,7 @@ public class NumberEncoder extends MessageToByteEncoder<Number> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, Number msg, ByteBuf out) {
+        // 转化成 BigInteger 对象
         // Convert to a BigInteger first for easier implementation.
         BigInteger v;
         if (msg instanceof BigInteger) {
@@ -38,6 +39,7 @@ public class NumberEncoder extends MessageToByteEncoder<Number> {
             v = new BigInteger(String.valueOf(msg));
         }
 
+        // 转换为字节数组
         // Convert the number into a byte array.
         byte[] data = v.toByteArray();
         int dataLength = data.length;
@@ -47,4 +49,5 @@ public class NumberEncoder extends MessageToByteEncoder<Number> {
         out.writeInt(dataLength);  // data length
         out.writeBytes(data);      // data
     }
+
 }

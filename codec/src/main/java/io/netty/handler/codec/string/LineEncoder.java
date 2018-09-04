@@ -91,4 +91,5 @@ public class LineEncoder extends MessageToMessageEncoder<CharSequence> {
         buffer.writeBytes(lineSeparator);
         out.add(buffer);
     }
+
 }

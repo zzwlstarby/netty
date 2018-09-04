@@ -15,6 +15,7 @@
  */
 package io.netty.example.echo;
 
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandler.Sharable;
@@ -53,6 +54,18 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
             });
             return;
         }
+
+        if (true) { // 调试打印
+            ByteBuf buf = (ByteBuf) msg;
+            int readerIndex = buf.readerIndex();
+
+            byte[] bytes = new byte[buf.readableBytes()];
+            buf.readBytes(bytes);
+            System.out.println("接收到消息：" + new String(bytes));
+
+            buf.readerIndex(readerIndex);
+        }
+
         ctx.write(msg).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {

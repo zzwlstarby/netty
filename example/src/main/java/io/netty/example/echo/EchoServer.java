@@ -20,15 +20,14 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.SelfSignedCertificate;
-import io.netty.handler.timeout.IdleStateHandler;
 
 import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Echoes back any received data from a client.
@@ -140,7 +139,9 @@ public final class EchoServer {
                          p.addLast(sslCtx.newHandler(ch.alloc()));
                      }
 
-                     p.addLast(new IdleStateHandler(0, 1, 0, TimeUnit.SECONDS));
+//                     p.addLast(new IdleStateHandler(0, 1, 0, TimeUnit.SECONDS));
+
+                     p.addLast(new LineBasedFrameDecoder(Integer.MAX_VALUE));
 
                      //p.addLast(new LoggingHandler(LogLevel.INFO));
                      p.addLast(serverHandler);
@@ -161,12 +162,12 @@ public final class EchoServer {
                 }
             }).sync();
 
-            bossGroup.schedule(new Runnable() {
-                @Override
-                public void run() {
-                    System.out.println("执行定时任务");
-                }
-            }, 5, TimeUnit.SECONDS);
+//            bossGroup.schedule(new Runnable() {
+//                @Override
+//                public void run() {
+//                    System.out.println("执行定时任务");
+//                }
+//            }, 5, TimeUnit.SECONDS);
 
 //            f.channel().writeAndFlush("123").addListener(new ChannelFutureListener() {
 //                @Override

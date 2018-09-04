@@ -45,10 +45,16 @@ final class CodecOutputList extends AbstractList<Object> implements RandomAccess
             };
 
     private interface CodecOutputListRecycler {
+
         void recycle(CodecOutputList codecOutputList);
+
     }
 
     private static final class CodecOutputLists implements CodecOutputListRecycler {
+
+        /**
+         * CodecOutputList 数组
+         */
         private final CodecOutputList[] elements;
         private final int mask;
 
@@ -56,6 +62,7 @@ final class CodecOutputList extends AbstractList<Object> implements RandomAccess
         private int count;
 
         CodecOutputLists(int numElements) {
+            // 创建 elements 数组
             elements = new CodecOutputList[MathUtil.safeFindNextPositivePowerOfTwo(numElements)];
             for (int i = 0; i < elements.length; ++i) {
                 // Size of 16 should be good enough for the majority of all users as an initial capacity.
@@ -88,15 +95,28 @@ final class CodecOutputList extends AbstractList<Object> implements RandomAccess
             ++count;
             assert count <= elements.length;
         }
+
     }
 
+    /**
+     * @return 从线程变量中，获得 CodecOutputList 对象
+     */
     static CodecOutputList newInstance() {
         return CODEC_OUTPUT_LISTS_POOL.get().getOrCreate();
     }
 
     private final CodecOutputListRecycler recycler;
+    /**
+     * 数组元素数量
+     */
     private int size;
+    /**
+     * 数组
+     */
     private Object[] array;
+    /**
+     * 是否插入过元素，自 Recycled 以来
+     */
     private boolean insertSinceRecycled;
 
     private CodecOutputList(CodecOutputListRecycler recycler, int size) {
@@ -215,6 +235,9 @@ final class CodecOutputList extends AbstractList<Object> implements RandomAccess
         insertSinceRecycled = true;
     }
 
+    /**
+     * 扩容 {@link #array} 数组
+     */
     private void expandArray() {
         // double capacity
         int newCapacity = array.length << 1;
@@ -228,4 +251,5 @@ final class CodecOutputList extends AbstractList<Object> implements RandomAccess
 
         array = newArray;
     }
+
 }
