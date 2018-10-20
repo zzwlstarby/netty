@@ -34,4 +34,17 @@ public class ThreadLocalRandomTest {
             Thread.interrupted(); // clear interrupted status in order to not affect other tests
         }
     }
+
+    // 和老徐排查一个问题
+    @Test
+    public void testYunai() {
+        System.out.println(-1 >>> 1);
+        System.out.println(0 >>> 1);
+        System.out.println(1 >>> 1);
+
+        System.out.println(-1 % 10);
+        System.out.println(-1 % 10);
+
+    }
+
 }
