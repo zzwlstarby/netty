@@ -199,6 +199,18 @@
           </execution>
         </executions>
       </plugin>
+
+
+        <!-- Disable checkstyle add by 芋艿 -->
+        <plugin>
+            <artifactId>maven-checkstyle-plugin</artifactId>
+            <executions>
+                <execution>
+                    <id>check-style</id>
+                    <phase>none</phase>
+                </execution>
+            </executions>
+        </plugin>
     </plugins>
   </build>
 </project>
