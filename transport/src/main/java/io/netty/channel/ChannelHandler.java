@@ -178,6 +178,15 @@ import java.lang.annotation.Target;
  * the operation in your application.
  *
  * 该组件实现了服务器对从客户端接收的数据的处理，即它的业务逻辑
+ * 它是一个接口族的父接口，它的实现负责接收并响应事件通知。
+ * 在 Netty 应用程序中，所有的数据处理逻辑都包含在这些核心抽象的实现中。
+ * 服务器会响应传入的消息，所以它需要实现 ChannelInboundHandler 接口， 用
+ * 来定义响应入站事件的方法。这个简单的应用程序只需要用到少量的这些方法，所以继承 ChannelInboundHandlerAdapter 类也就足够了，
+ * 它提供了 ChannelInboundHandler 的默认实现
+ *
+ * 针对不同类型的事件来调用 ChannelHandler
+ * 应用程序通过实现或者扩展 ChannelHandler 来挂钩到事件的生命周期，并且提供自定义的应用程序逻辑；
+ * 在架构上， ChannelHandler 有助于保持业务逻辑与网络处理代码的分离。这简化了开发过程，因为代码必须不断地演化以响应不断变化的需求。
  */
 public interface ChannelHandler {
 

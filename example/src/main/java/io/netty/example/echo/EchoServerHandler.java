@@ -24,16 +24,23 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 
 /**
  * Handler implementation for the echo server.
+ * @Sharable:标示一个ChannelHandler 可以被多个 Channel 安全地共享
  */
 @Sharable
 public class EchoServerHandler extends ChannelInboundHandlerAdapter {
 
+    /**
+     * 对于每个传入的消息都要调用；
+     * @param ctx
+     * @param msg
+     */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         if ("fuck".equals(msg)) {
             ctx.channel().close().addListener(new ChannelFutureListener() { // 我是一个萌萌哒监听器
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
+                    //将消息记录到控制台
                     System.out.println(Thread.currentThread() + "我会被唤醒");
                 }
             });

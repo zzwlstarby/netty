@@ -28,6 +28,8 @@ public interface ChannelInboundHandler extends ChannelHandler {
 
     /**
      * The {@link Channel} of the {@link ChannelHandlerContext} was unregistered from its {@link EventLoop}
+     *
+     *
      */
     void channelUnregistered(ChannelHandlerContext ctx) throws Exception;
 
@@ -43,7 +45,9 @@ public interface ChannelInboundHandler extends ChannelHandler {
     void channelInactive(ChannelHandlerContext ctx) throws Exception;
 
     /**
-     * Invoked when the current {@link Channel} has read a message from the peer.
+     * Invoked when the current {@link Channel} has read a message from the peer
+     *
+     * 对于每个传入的消息都要调用；.
      */
     void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception;
 
@@ -52,6 +56,9 @@ public interface ChannelInboundHandler extends ChannelHandler {
      * {@link #channelRead(ChannelHandlerContext, Object)}.  If {@link ChannelOption#AUTO_READ} is off, no further
      * attempt to read an inbound data from the current {@link Channel} will be made until
      * {@link ChannelHandlerContext#read()} is called.
+     * 通知ChannelInboundHandler最后一次对channelRead()的调用是当前批量读取中的最后一条消息
+     *
+     *
      */
     void channelReadComplete(ChannelHandlerContext ctx) throws Exception;
 
@@ -68,6 +75,8 @@ public interface ChannelInboundHandler extends ChannelHandler {
 
     /**
      * Gets called if a {@link Throwable} was thrown.
+     *
+     * 在读取操作期间， 有异常抛出时会调用。
      */
     @Override
     @SuppressWarnings("deprecation")

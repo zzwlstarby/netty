@@ -140,3 +140,11 @@ are listed below:
 
 Automatic modules do not provide any means to declare dependencies, so you need to list each used module separately
 in your `module-info` file.
+
+
+在网络协议的标准多层视图中，传输层提供了端到端的或者主机
+到主机的通信服务。
+因特网通信是建立在 TCP 传输之上的。除了一些由 Java NIO 实现提供的服务器端性能增强之外，
+NIO 传输大多数时候指的就是 TCP 传输。
+
+

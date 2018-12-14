@@ -83,7 +83,7 @@ public final class EchoServer {
             // 创建 ServerBootstrap 对象
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup) // 设置使用的 EventLoopGroup
-             .channel(NioServerSocketChannel.class) // 设置要被实例化的为 NioServerSocketChannel 类
+             .channel(NioServerSocketChannel.class) // 设置要被实例化的为 NioServerSocketChannel 类.指定所使用的 NIO 传输 Channel
              .option(ChannelOption.SO_BACKLOG, 100) // 设置 NioServerSocketChannel 的可选项
              .handler(new LoggingHandler(LogLevel.INFO)) // 设置 NioServerSocketChannel 的处理器
 //                .handler(new IdleStateHandler(0, 1, 0, TimeUnit.SECONDS))
@@ -132,6 +132,14 @@ public final class EchoServer {
 //
 //            })
              .childHandler(new ChannelInitializer<SocketChannel>() {
+
+                 /**
+                  * 这是关键。当一个新的连接被接受时，一个新的子 Channel 将会被创建，而 ChannelInitializer
+                  * 将会把一个你的EchoServerHandler 的实例添加到该 Channel 的 ChannelPipeline 中。正如我们之前所解释的，
+                  * 这个 ChannelHandler 将会收到有关入站消息的通知。
+                  * @param ch            the {@link Channel} which was registered.
+                  * @throws Exception
+                  */
                  @Override
                  public void initChannel(SocketChannel ch) throws Exception { // 设置连入服务端的 Client 的 SocketChannel 的处理器
                      ChannelPipeline p = ch.pipeline();
