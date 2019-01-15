@@ -16,6 +16,8 @@
 package io.netty.util.concurrent;
 
 /**
+ *
+ * 指定一个可修改（可写入）的future
  * Special {@link Future} which is writable.
  */
 public interface Promise<V> extends Future<V> {
@@ -23,6 +25,8 @@ public interface Promise<V> extends Future<V> {
     /**
      * Marks this future as a success and notifies all
      * listeners.
+     *
+     * 标记
      *
      * If it is success or failed already it will throw an {@link IllegalStateException}.
      */
