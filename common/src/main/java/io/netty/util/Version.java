@@ -36,6 +36,8 @@ import java.util.TreeMap;
  * generated in build time.  Note that it may not be possible to retrieve the information completely, depending on
  * your environment, such as the specified {@link ClassLoader}, the current {@link SecurityManager}.
  * </p>
+ *
+ *
  */
 public final class Version {
 
