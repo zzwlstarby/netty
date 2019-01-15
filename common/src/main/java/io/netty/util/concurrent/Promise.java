@@ -26,9 +26,11 @@ public interface Promise<V> extends Future<V> {
      * Marks this future as a success and notifies all
      * listeners.
      *
-     * 标记
+     * 设置此future 为成功，并且通知当前future上所有的监听器。
      *
      * If it is success or failed already it will throw an {@link IllegalStateException}.
+     *
+     * 如果已经成功或者失败，则抛IllegalStateException 异常。
      */
     Promise<V> setSuccess(V result);
 
@@ -36,9 +38,13 @@ public interface Promise<V> extends Future<V> {
      * Marks this future as a success and notifies all
      * listeners.
      *
+     * 设置此future为成功，并通知当前future上所有的监听器。
+     *
      * @return {@code true} if and only if successfully marked this future as
      *         a success. Otherwise {@code false} because this future is
      *         already marked as either a success or a failure.
+     *         如果仅仅设置此future为成功标识为成功，或者由于此future已经被设置为成功或者失败，则返回true
+     *
      */
     boolean trySuccess(V result);
 
@@ -46,13 +52,19 @@ public interface Promise<V> extends Future<V> {
      * Marks this future as a failure and notifies all
      * listeners.
      *
+     * 设置此future失败，并且同事当前future上所有的监听器。
+     *
      * If it is success or failed already it will throw an {@link IllegalStateException}.
+     *
+     * 如果已经成功或者失败，则抛IllegalStateException异常。
      */
     Promise<V> setFailure(Throwable cause);
 
     /**
      * Marks this future as a failure and notifies all
      * listeners.
+     *
+     * 设置此future为失败，并且通知当前future上所有监听器。
      *
      * @return {@code true} if and only if successfully marked this future as
      *         a failure. Otherwise {@code false} because this future is
