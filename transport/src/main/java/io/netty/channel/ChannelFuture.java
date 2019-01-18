@@ -123,12 +123,17 @@ import java.util.concurrent.TimeUnit;
  * 直到完成I / O操作并且线程间通知成本相对较高。此外，在特定情况下存在死锁的可能性，如下所述。
  *
  * <h3>Do not call {@link #await()} inside {@link ChannelHandler}</h3>
+ * 不要再ChannelHandler调用await()方法。
  * <p>
  * The event handler methods in {@link ChannelHandler} are usually called by
  * an I/O thread.  If {@link #await()} is called by an event handler
  * method, which is called by the I/O thread, the I/O operation it is waiting
  * for might never complete because {@link #await()} can block the I/O
  * operation it is waiting for, which is a dead lock.
+ * {@link ChannelHandler}中的事件处理程序方法通常由I / O线程调用。
+ * 如果由I / O线程调用的事件处理程序方法调用{@link #await（）}，
+ * 则它等待的I / O操作可能永远不会完成，因为{@link #await（）}可以阻止它正在等待的I / O *操作，这是一个死锁。
+ *
  * <pre>
  * // BAD - NEVER DO THIS
  * {@code @Override}
