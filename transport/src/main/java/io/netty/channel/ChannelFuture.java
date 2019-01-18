@@ -136,21 +136,25 @@ import java.util.concurrent.TimeUnit;
  *
  * <pre>
  * // BAD - NEVER DO THIS
+ * //反例，永远不要这么写
  * {@code @Override}
  * public void channelRead({@link ChannelHandlerContext} ctx, Object msg) {
  *     {@link ChannelFuture} future = ctx.channel().close();
  *     future.awaitUninterruptibly();
  *     // Perform post-closure operation
+ *     执行关闭后操作
  *     // ...
  * }
  *
  * // GOOD
+ * //正确例子
  * {@code @Override}
  * public void channelRead({@link ChannelHandlerContext} ctx, Object msg) {
  *     {@link ChannelFuture} future = ctx.channel().close();
  *     future.addListener(new {@link ChannelFutureListener}() {
  *         public void operationComplete({@link ChannelFuture} future) {
  *             // Perform post-closure operation
+ *             执行关闭后操作
  *             // ...
  *         }
  *     });
@@ -162,7 +166,12 @@ import java.util.concurrent.TimeUnit;
  * make sure you do not call {@link #await()} in an I/O thread.  Otherwise,
  * {@link BlockingOperationException} will be raised to prevent a dead lock.
  *
+ * 尽管存在上述缺点，但肯定存在调用{@link #await（）}更方便的情况。在这种情况下，
+ * 请确保您不在I / O线程中调用{@link #await（）}，否则，将引发{@link BlockingOperationException}以防止死锁
+ *
+ *
  * <h3>Do not confuse I/O timeout and await timeout</h3>
+ * 不要混淆I / O超时和等待超时
  *
  * The timeout value you specify with {@link #await(long)},
  * {@link #await(long, TimeUnit)}, {@link #awaitUninterruptibly(long)}, or
@@ -170,8 +179,13 @@ import java.util.concurrent.TimeUnit;
  * timeout at all.  If an I/O operation times out, the future will be marked as
  * 'completed with failure,' as depicted in the diagram above.  For example,
  * connect timeout should be configured via a transport-specific option:
+ * 使用{@link #await（long）}指定的超时值， {@link #await(long, TimeUnit)}, {@link #awaitUninterruptibly(long)}, or
+ *  {@link #awaitUninterruptibly(long, TimeUnit)}完全与I / O *超时无关，
+ *  如果I / O操作超时，则将来标记为'失败，如上图所示。例如，connect timeout应通过特定于传输的选项进行配置：
+ *
  * <pre>
  * // BAD - NEVER DO THIS
+ * //反例：
  * {@link Bootstrap} b = ...;
  * {@link ChannelFuture} f = b.connect(...);
  * f.awaitUninterruptibly(10, TimeUnit.SECONDS);
@@ -186,13 +200,16 @@ import java.util.concurrent.TimeUnit;
  * }
  *
  * // GOOD
+ * //正例
  * {@link Bootstrap} b = ...;
  * // Configure the connect timeout option.
+ * //配置连接超时
  * <b>b.option({@link ChannelOption}.CONNECT_TIMEOUT_MILLIS, 10000);</b>
  * {@link ChannelFuture} f = b.connect(...);
  * f.awaitUninterruptibly();
  *
  * // Now we are sure the future is completed.
+ * 现在我们确信future已经完成。
  * assert f.isDone();
  *
  * if (f.isCancelled()) {
