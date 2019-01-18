@@ -26,7 +26,7 @@ public interface Promise<V> extends Future<V> {
      * Marks this future as a success and notifies all
      * listeners.
      *
-     * 设置此future 为成功，并且通知当前future上所有的监听器。
+     * 设置此future 为返回成功，并且通知当前future上所有的监听器。
      *
      * If it is success or failed already it will throw an {@link IllegalStateException}.
      *
@@ -38,7 +38,7 @@ public interface Promise<V> extends Future<V> {
      * Marks this future as a success and notifies all
      * listeners.
      *
-     * 设置此future为成功，并通知当前future上所有的监听器。
+     * 设置此future返回成功，并通知当前future上所有的监听器。
      *
      * @return {@code true} if and only if successfully marked this future as
      *         a success. Otherwise {@code false} because this future is
@@ -52,7 +52,7 @@ public interface Promise<V> extends Future<V> {
      * Marks this future as a failure and notifies all
      * listeners.
      *
-     * 设置此future失败，并且同事当前future上所有的监听器。
+     * 设置此future返回失败，并且同事当前future上所有的监听器。
      *
      * If it is success or failed already it will throw an {@link IllegalStateException}.
      *
@@ -64,7 +64,7 @@ public interface Promise<V> extends Future<V> {
      * Marks this future as a failure and notifies all
      * listeners.
      *
-     * 设置此future为失败，并且通知当前future上所有监听器。
+     * 设置此future返回失败，并且通知当前future上所有监听器。
      *
      * @return {@code true} if and only if successfully marked this future as
      *         a failure. Otherwise {@code false} because this future is
@@ -74,6 +74,8 @@ public interface Promise<V> extends Future<V> {
 
     /**
      * Make this future impossible to cancel.
+     *
+     * 使这个future无法取消。
      *
      * @return {@code true} if and only if successfully marked this future as uncancellable or it is already done
      *         without being cancelled.  {@code false} if this future has been cancelled already.

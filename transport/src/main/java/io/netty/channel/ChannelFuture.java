@@ -25,12 +25,20 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * The result of an asynchronous {@link Channel} I/O operation.
+ *
+ * 一个异步得IO操作得结果。
+ *
  * <p>
  * All I/O operations in Netty are asynchronous.  It means any I/O calls will
  * return immediately with no guarantee that the requested I/O operation has
  * been completed at the end of the call.  Instead, you will be returned with
  * a {@link ChannelFuture} instance which gives you the information about the
  * result or status of the I/O operation.
+ *
+ *在netty中所有得操作都是异步得。这意味着任何I / O调用都将立即返回，
+ * 并且不保证所请求的I / O操作在调用结束时是完成的 。
+ * 但是，将返回一个 {@link ChannelFuture}实例，该实例提供了有关I / O操作的结果或者状态的信息。
+ *
  * <p>
  * A {@link ChannelFuture} is either <em>uncompleted</em> or <em>completed</em>.
  * When an I/O operation begins, a new future object is created.  The new future
@@ -40,6 +48,14 @@ import java.util.concurrent.TimeUnit;
  * marked as completed with more specific information, such as the cause of the
  * failure.  Please note that even failure and cancellation belong to the
  * completed state.
+ *
+ * {@link ChannelFuture}是无论是否已经完成。 当I / O操作开始时，将创建一个新的future对象。
+ * 因为I / O操作还没有完成,所以这个新的future最初是未完成的(它既没有成功，也没有被取消，也没有失败)
+ *
+ * 如果I / O操作成功完成，失败或取消，则将使用更具体的信息标记为已完成，例如失败的原因。
+ *
+ * 请注意，即使失败和取消也属于已完成状态。可以理解为完成的状态下才有结果成功或者被取消或者失败。
+ *
  * <pre>
  *                                      +---------------------------+
  *                                      | Completed successfully    |
@@ -64,11 +80,20 @@ import java.util.concurrent.TimeUnit;
  * operation. It also allows you to add {@link ChannelFutureListener}s so you
  * can get notified when the I/O operation is completed.
  *
+ * ChannelFuture提供了各种方法来检查I / O操作是否已完成,等待完成以及查询i/o操作的结果。
+ * 当然，也可以通过添加一个ChannelFutureListener，在i/o操作完成后通知你
+ *
+ *
  * <h3>Prefer {@link #addListener(GenericFutureListener)} to {@link #await()}</h3>
+ * 建议通过addListener（GenericFutureListener）方法去等待。
  *
  * It is recommended to prefer {@link #addListener(GenericFutureListener)} to
  * {@link #await()} wherever possible to get notified when an I/O operation is
  * done and to do any follow-up tasks.
+ *
+ * 建议尽可能选择{@link #addListener（GenericFutureListener）}到* {@link #await（）}，
+ * 以便在完成I / O操作时获得通知并执行任何后续任务
+ *
  * <p>
  * {@link #addListener(GenericFutureListener)} is non-blocking.  It simply adds
  * the specified {@link ChannelFutureListener} to the {@link ChannelFuture}, and
@@ -77,6 +102,14 @@ import java.util.concurrent.TimeUnit;
  * performance and resource utilization because it does not block at all, but
  * it could be tricky to implement a sequential logic if you are not used to
  * event-driven programming.
+ *
+ *  {@link #addListener(GenericFutureListener)} 是非阻塞的。将指定的
+ *  {@link ChannelFutureListener}添加到{@link ChannelFuture}，
+ *  I / O线程将在与future相关的I / O操作完成时通知监听器。
+ *
+ * {@link ChannelFutureListener}产生最佳的性能和资源利用率，因为它根本不会阻塞，
+ * 但是如果你不习惯事件驱动的编程，那么实现顺序逻辑可能会很棘手
+ *
  * <p>
  * By contrast, {@link #await()} is a blocking operation.  Once called, the
  * caller thread blocks until the operation is done.  It is easier to implement
@@ -84,6 +117,10 @@ import java.util.concurrent.TimeUnit;
  * unnecessarily until the I/O operation is done and there's relatively
  * expensive cost of inter-thread notification.  Moreover, there's a chance of
  * dead lock in a particular circumstance, which is described below.
+ *
+ * 相比之下，{@ link #await（）}是一个阻塞操作。一旦被调用，调用程序线程就会阻塞，直到操作完成。
+ * 使用{@link #await（）}实现顺序逻辑更容易，但调用程序线程不必要地阻塞，
+ * 直到完成I / O操作并且线程间通知成本相对较高。此外，在特定情况下存在死锁的可能性，如下所述。
  *
  * <h3>Do not call {@link #await()} inside {@link ChannelHandler}</h3>
  * <p>
@@ -167,6 +204,8 @@ public interface ChannelFuture extends Future<Void> {
     /**
      * Returns a channel where the I/O operation associated with this
      * future takes place.
+     *
+     * 返回和当前ChannelFuture相关联的io操作的channel
      */
     Channel channel();
 
@@ -207,6 +246,17 @@ public interface ChannelFuture extends Future<Void> {
      *     <li>{@link #sync()}</li>
      *     <li>{@link #syncUninterruptibly()}</li>
      * </ul>
+     *
+     * 如果当前ChannelFuture是个无效的future ，则返回true，所以也不允许调用当前ChannelFuture的以下方法
+     *  <li>{@link #addListener(GenericFutureListener)}</li>
+     *      *     <li>{@link #addListeners(GenericFutureListener[])}</li>
+     *      *     <li>{@link #await()}</li>
+     *      *     <li>{@link #await(long, TimeUnit)} ()}</li>
+     *      *     <li>{@link #await(long)} ()}</li>
+     *      *     <li>{@link #awaitUninterruptibly()}</li>
+     *      *     <li>{@link #sync()}</li>
+     *      *     <li>{@link #syncUninterruptibly()}</li>
+     *
      */
     boolean isVoid();
 }

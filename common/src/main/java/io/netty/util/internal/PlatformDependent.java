@@ -60,9 +60,15 @@ import static java.lang.Math.min;
  * Utility that detects various properties specific to the current runtime
  * environment, such as Java version and the availability of the
  * {@code sun.misc.Unsafe} object.
+ *
+ * 此类用于检查当前运行环境（操作系统环境）设置的各种属性值。例如Java版本和unsafe对象的可用性。
+ *
  * <p>
  * You can disable the use of {@code sun.misc.Unsafe} if you specify
  * the system property <strong>io.netty.noUnsafe</strong>.
+ *
+ * 如果你设置io.netty.noUnsafe作为系统属性，你可以禁用sun.misc.unsafe。
+ *
  */
 public final class PlatformDependent {
 
@@ -113,6 +119,10 @@ public final class PlatformDependent {
         }
     };
 
+
+    /**
+     * 初始化系统运行环境信息
+     */
     static {
         if (javaVersion() >= 7) {
             RANDOM_PROVIDER = new ThreadLocalRandomProvider() {
@@ -233,6 +243,8 @@ public final class PlatformDependent {
 
     /**
      * Return the version of Java under which this library is used.
+     *
+     * 返回使用此库的Java版本
      */
     public static int javaVersion() {
         return PlatformDependent0.javaVersion();

@@ -23,6 +23,8 @@ import java.security.PrivilegedAction;
 
 /**
  * A collection of utility methods to retrieve and parse the values of the Java system properties.
+ *
+ * 用于检索和解析Java系统属性值的工具类方法的集合
  */
 public final class SystemPropertyUtil {
 
@@ -31,6 +33,8 @@ public final class SystemPropertyUtil {
     /**
      * Returns {@code true} if and only if the system property with the specified {@code key}
      * exists.
+     *
+     * 判断java 系统属性中是否包含当前key的值，如果存在，则返回true
      */
     public static boolean contains(String key) {
         return get(key) != null;

@@ -788,6 +788,10 @@ final class PlatformDependent0 {
         return IS_ANDROID;
     }
 
+    /**
+     * 判断是否是android平台
+     * @return
+     */
     private static boolean isAndroid0() {
         // Idea: Sometimes java binaries include Android classes on the classpath, even if it isn't actually Android.
         // Rather than check if certain classes are present, just check the VM, which is tied to the JDK.
@@ -817,6 +821,10 @@ final class PlatformDependent0 {
         return JAVA_VERSION;
     }
 
+    /**
+     * 返回此库运行的Java版本
+     * @return
+     */
     private static int javaVersion0() {
         final int majorVersion;
 
