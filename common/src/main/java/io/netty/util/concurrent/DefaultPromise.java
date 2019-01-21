@@ -30,6 +30,18 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import static io.netty.util.internal.ObjectUtil.checkNotNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+/**
+ * 实现一个默认的可修改的但是不可取消的future
+ * 这个类是用来获取结果信息的，就是用来获取线程执行的结果信息，但是在获取结果信息的时候，还可以添加一些监听的信息。
+ * 该类是netty底层源码最基础的类，其他的类都是依赖该类的实现，结构为
+ * java中的Future->Future>AbstractFuture->DefaultPromise
+ * 内部有一个 volatile Object result;对象，用来表示设置该Promise为成功的标识，其中volatile关键字，是为了表示各个线程在主内存的可见性
+ *
+ * netty Future是基于jdk Future扩展，以监听完成任务触发执行
+ * Promise是对Future修改任务数据
+ * DefaultPromise是重要的模板类，其它不同类型实现基本是一层简单的包装，如DefaultChannelPromise
+ * @param <V>
+ */
 public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(DefaultPromise.class);
     private static final InternalLogger rejectedExecutionLogger =

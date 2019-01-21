@@ -42,7 +42,7 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
     /**
      * Returns the cause of the failed I/O operation if the I/O operation has
      * failed.
-     * 如果I / O操作失败，则返回I / O操作失败的原因。
+     * 如果I / O操作失败，则返回I / O操作失败的原因的异常。
      *
      * @return the cause of the failure.
      *         {@code null} if succeeded or this future is not
