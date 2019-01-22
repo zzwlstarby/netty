@@ -36,6 +36,11 @@ import java.net.NetworkInterface;
 /**
  * ChannelOption 主要是用于配置netty中一些相关的参数，这些参数的key已经在ChannelOption中以静态变量的方式设置好了，可以直接拿来使用，
  * 并且配置相关的value，如果ChannelOption设置了一个不存在的key，就会以日志的形式提示错误信息，但是不会抛出异常。
+ *
+ * netty 中在创建ServerBootstrap 时，里面会维护一个生成好的LinkedHashMap, 来保存所有的ChannelOption及对应的值
+ * 在ServerBootstrap 中放option时，会将这个option对象，及value存放到这个LinkedHashMap当中。
+ * 在serverBootstrap 绑定到具体的端口时，init()方法当中，会去将之前的options的信息，绑定到具体channel中
+ * ChannelOption主要代表channel相关的一些常量
  * @param <T>
  */
 public class ChannelOption<T> extends AbstractConstant<ChannelOption<T>> {
@@ -83,6 +88,7 @@ public class ChannelOption<T> extends AbstractConstant<ChannelOption<T>> {
         return (ChannelOption<T>) pool.newInstance(name);
     }
 
+    //
     public static final ChannelOption<ByteBufAllocator> ALLOCATOR = valueOf("ALLOCATOR");
     public static final ChannelOption<RecvByteBufAllocator> RCVBUF_ALLOCATOR = valueOf("RCVBUF_ALLOCATOR");
     public static final ChannelOption<MessageSizeEstimator> MESSAGE_SIZE_ESTIMATOR = valueOf("MESSAGE_SIZE_ESTIMATOR");

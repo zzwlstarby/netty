@@ -108,6 +108,8 @@ public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerCh
      * Allow to specify a {@link ChannelOption} which is used for the {@link Channel} instances once they get created
      * (after the acceptor accepted the {@link Channel}). Use a value of {@code null} to remove a previous set
      * {@link ChannelOption}.
+     *
+     * ServerBootstrap启动时可以设置一些和channel相关的常量值。
      */
     public <T> ServerBootstrap childOption(ChannelOption<T> childOption, T value) {
         if (childOption == null) {
