@@ -18,7 +18,15 @@ package io.netty.util;
 /**
  * Holds {@link Attribute}s which can be accessed via {@link AttributeKey}.
  *
+ *
+ *
  * Implementations must be Thread-safe.
+ *
+ * 实现当前接口的方法必须时线程安全的
+ *
+ * 谁实现了AttributeMap接口？
+ *
+ * 答案是所有的Channel和ChannelHandlerContext，
  */
 public interface AttributeMap {
     /**

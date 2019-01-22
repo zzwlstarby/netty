@@ -27,11 +27,22 @@ import java.net.NetworkInterface;
  * way. Which {@link ChannelOption} is supported depends on the actual implementation
  * of {@link ChannelConfig} and may depend on the nature of the transport it belongs
  * to.
+ * {@link ChannelOption}允许以类型安全的方式配置{@link ChannelConfig}。
+ * 支持哪个{@link ChannelOption}取决于{@link ChannelConfig}的实际实现，并且可能取决于它所属的传输的性质*。
  *
  * @param <T>   the type of the value which is valid for the {@link ChannelOption}
  */
+
+/**
+ * ChannelOption 主要是用于配置netty中一些相关的参数，这些参数的key已经在ChannelOption中以静态变量的方式设置好了，可以直接拿来使用，
+ * 并且配置相关的value，如果ChannelOption设置了一个不存在的key，就会以日志的形式提示错误信息，但是不会抛出异常。
+ * @param <T>
+ */
 public class ChannelOption<T> extends AbstractConstant<ChannelOption<T>> {
 
+    /**
+     * 维护ChannelOption的常量池。
+     */
     private static final ConstantPool<ChannelOption<Object>> pool = new ConstantPool<ChannelOption<Object>>() {
         @Override
         protected ChannelOption<Object> newConstant(int id, String name) {
@@ -41,6 +52,7 @@ public class ChannelOption<T> extends AbstractConstant<ChannelOption<T>> {
 
     /**
      * Returns the {@link ChannelOption} of the specified name.
+     * 通过泛型方法，创建一个指定名称的常量。
      */
     @SuppressWarnings("unchecked")
     public static <T> ChannelOption<T> valueOf(String name) {

@@ -22,6 +22,12 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 /**
  * Default {@link AttributeMap} implementation which use simple synchronization per bucket to keep the memory overhead
  * as low as possible.
+ *
+ *
+ */
+
+/**
+ * DefaultAttributeMap实现了AttributeMap接口，AbstractChannel和DefaultChannelHandlerContext通过继承DefaultAttributeMap也实现了AttributeMap接口
  */
 public class DefaultAttributeMap implements AttributeMap {
 
@@ -124,6 +130,10 @@ public class DefaultAttributeMap implements AttributeMap {
         return key.id() & MASK;
     }
 
+    /**
+     * DefaultAttribute 通过继承AtomicReference来获取对引用操作的原子能力。
+     * @param <T>
+     */
     @SuppressWarnings("serial")
     private static final class DefaultAttribute<T> extends AtomicReference<T> implements Attribute<T> {
 
@@ -158,7 +168,7 @@ public class DefaultAttributeMap implements AttributeMap {
 
         @Override
         public T setIfAbsent(T value) {
-            while (!compareAndSet(null, value)) {
+            while (!super.compareAndSet(null, value)) {
                 T old = get();
                 if (old != null) {
                     return old;
@@ -170,7 +180,7 @@ public class DefaultAttributeMap implements AttributeMap {
         @Override
         public T getAndRemove() {
             removed = true;
-            T oldValue = getAndSet(null);
+            T oldValue = super.getAndSet(null);
             remove0();
             return oldValue;
         }
@@ -178,7 +188,7 @@ public class DefaultAttributeMap implements AttributeMap {
         @Override
         public void remove() {
             removed = true;
-            set(null);
+            super.set(null);
             remove0();
         }
 

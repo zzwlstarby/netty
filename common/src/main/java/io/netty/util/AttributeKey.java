@@ -19,11 +19,17 @@ package io.netty.util;
  * Key which can be used to access {@link Attribute} out of the {@link AttributeMap}. Be aware that it is not be
  * possible to have multiple keys with the same name.
  *
+ * 当前类主要用于从{@link AttributeMap}访问{@link Attribute}的key。请注意，不可能有多个具有相同名称的键
+ *
+ *
  * @param <T>   the type of the {@link Attribute} which can be accessed via this {@link AttributeKey}.
  */
 @SuppressWarnings("UnusedDeclaration") // 'T' is used only at compile time
 public final class AttributeKey<T> extends AbstractConstant<AttributeKey<T>> {
 
+    /**
+     * 通过匿名类创建当前常量对象的常量池。
+     */
     private static final ConstantPool<AttributeKey<Object>> pool = new ConstantPool<AttributeKey<Object>>() {
         @Override
         protected AttributeKey<Object> newConstant(int id, String name) {

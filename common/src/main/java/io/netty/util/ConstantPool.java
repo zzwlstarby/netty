@@ -25,16 +25,32 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * A pool of {@link Constant}s.
  *
+ * ConstantPool 常量池，来管理和维护Constant，
+ * 常量池主要在ChannelOption或者AttributeKey等应用类中生成维护对应的常量。
+ *
  * @param <T> the type of the constant
+ */
+
+/**
+ * 此类主要用作维护某种类型常量的常量池使用。
+ * @param <T>
  */
 public abstract class ConstantPool<T extends Constant<T>> {
 
+    /**
+     * 存储常量，key为常量的name，value为常量对象。
+     */
     private final ConcurrentMap<String, T> constants = PlatformDependent.newConcurrentHashMap();
 
+    /**
+     * 在常量池中创建常量时，设置常量的id，则通过此变量设置当前常量的id
+     */
     private final AtomicInteger nextId = new AtomicInteger(1);
 
     /**
      * Shortcut of {@link #valueOf(String) valueOf(firstNameComponent.getName() + "#" + secondNameComponent)}.
+     *
+     * 根据类名的第一名字和第二名字字符串获取或者生成常量。
      */
     public T valueOf(Class<?> firstNameComponent, String secondNameComponent) {
         if (firstNameComponent == null) {
@@ -63,12 +79,15 @@ public abstract class ConstantPool<T extends Constant<T>> {
     /**
      * Get existing constant by name or creates new one if not exists. Threadsafe
      *
+     * 根据名称获取已经存在的常量对象，如果不存在则线程安全的创建一个常量对象。
+     *
      * @param name the name of the {@link Constant}
      */
     private T getOrCreate(String name) {
         T constant = constants.get(name);
         if (constant == null) {
             final T tempConstant = newConstant(nextId(), name);
+            //ConcurrentHashMap单独的读写操作(get,put,putIfAbsent...)是完全线程安全且一致的
             constant = constants.putIfAbsent(name, tempConstant);
             if (constant == null) {
                 return tempConstant;
@@ -80,6 +99,9 @@ public abstract class ConstantPool<T extends Constant<T>> {
 
     /**
      * Returns {@code true} if a {@link AttributeKey} exists for the given {@code name}.
+     *
+     * 根据常量name，判断当前常量是否存在，如果存在则返回true
+     *
      */
     public boolean exists(String name) {
         checkNotNullAndNotEmpty(name);
@@ -89,6 +111,8 @@ public abstract class ConstantPool<T extends Constant<T>> {
     /**
      * Creates a new {@link Constant} for the given {@code name} or fail with an
      * {@link IllegalArgumentException} if a {@link Constant} for the given {@code name} exists.
+     *
+     * 线程安全的方式根据常量名称创建一个常量对象，如果常量已经存在，则抛异常。
      */
     public T newInstance(String name) {
         checkNotNullAndNotEmpty(name);
@@ -97,7 +121,7 @@ public abstract class ConstantPool<T extends Constant<T>> {
 
     /**
      * Creates constant by name or throws exception. Threadsafe
-     *
+     * 线程安全的方式按名称创建常量或抛出异常。
      * @param name the name of the {@link Constant}
      */
     private T createOrThrow(String name) {
@@ -113,6 +137,11 @@ public abstract class ConstantPool<T extends Constant<T>> {
         throw new IllegalArgumentException(String.format("'%s' is already in use", name));
     }
 
+    /**
+     * 判断当前常量name是否为null或者空字符串
+     * @param name
+     * @return
+     */
     private static String checkNotNullAndNotEmpty(String name) {
         ObjectUtil.checkNotNull(name, "name");
 
@@ -123,8 +152,18 @@ public abstract class ConstantPool<T extends Constant<T>> {
         return name;
     }
 
+    /**
+     * 子类 实现生成常量对象的方法。
+     * @param id
+     * @param name
+     * @return
+     */
     protected abstract T newConstant(int id, String name);
 
+    /**
+     * 创建新的常量时，生成对应的id
+     * @return
+     */
     @Deprecated
     public final int nextId() {
         return nextId.getAndIncrement();

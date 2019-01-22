@@ -19,6 +19,9 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Base implementation of {@link Constant}.
+ *
+ * 实现Constant接口的一个基础常量对象基础类。
+ *
  */
 public abstract class AbstractConstant<T extends AbstractConstant<T>> implements Constant<T> {
 
