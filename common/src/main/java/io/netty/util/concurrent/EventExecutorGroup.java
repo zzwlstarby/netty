@@ -31,6 +31,13 @@ import java.util.concurrent.TimeUnit;
  * EventExecutorGroup通过next()方法负责提供返回一个EventExecutor（事件执行器），
  * 基于这个。它也负责管理EventExecutor（事件执行器）的生命周期，允许以一个全局的方式关闭它们。
  *
+ * EventExecutorGroup接口继承了Java并发包的ScheduledExecutorService接口，覆盖了原接口的方法，
+ * 主要区别在于返回值换成了Netty自身的Future实现，另外新添加了几个方法。
+ *
+ */
+
+/**
+ * EventExecutorGroup 集成了jdk的ScheduledExecutorService接口来计划任务实现线程池。
  */
 public interface EventExecutorGroup extends ScheduledExecutorService, Iterable<EventExecutor> {
 

@@ -32,6 +32,11 @@ import java.util.concurrent.ThreadFactory;
 
 /**
  * NioEventLoop 的分组实现类
+ * NioEventLoopGroup类的构造函数依然如其父类一样清晰易懂，在此不再赘述。比较重要的是实现了抽象方法newChild，用于新建NioEventLoop实例：
+ *
+ * executor可以在构造函数中传入，或者使用MultithreadEventExecutorGroup类默认创建的ThreadPerTaskExecutor；
+ * 可变参数args依次是SelectorProvider、SelectStrategyFactory和RejectedExecutionHandler，默认值分别为SelectorProvider.provider()，、DefaultSelectStrategyFactory.INSTANCE和RejectedExecutionHandlers.reject()，这些顺着NioEventLoopGroup类的构造函数找到父类MultithreadEventExecutorGroup的构造函数即可理解，在此不再赘述。
+
  *
  * {@link MultithreadEventLoopGroup} implementations which is used for NIO {@link Selector} based {@link Channel}s.
  */

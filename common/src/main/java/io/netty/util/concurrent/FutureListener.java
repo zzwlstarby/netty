@@ -18,6 +18,9 @@ package io.netty.util.concurrent;
 
 /**
  * A subtype of {@link GenericFutureListener} that hides type parameter for convenience.
+ *
+ * {@link GenericFutureListener}的子类型，为方便起见，隐藏了类型参数。
+ *
  * <pre>
  * Future f = new DefaultPromise(..);
  * f.addListener(new FutureListener() {

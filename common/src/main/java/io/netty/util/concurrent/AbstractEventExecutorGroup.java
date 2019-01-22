@@ -29,6 +29,11 @@ import static io.netty.util.concurrent.AbstractEventExecutor.*;
 /**
  * EventExecutor ( 事件执行器 )的分组抽象类
  *
+ * 查看AbstractEventExecutorGroup类，可以发现该类提供EventExecutorGroup接口的默认实现，
+ * 都是委托给next方法，该方法定义在EventExecutorGroup接口中，
+ * 用于取得EventExecutorGroup管理的一个EventExecutor。
+ *
+ *
  * Abstract base class for {@link EventExecutorGroup} implementations.
  */
 public abstract class AbstractEventExecutorGroup implements EventExecutorGroup {

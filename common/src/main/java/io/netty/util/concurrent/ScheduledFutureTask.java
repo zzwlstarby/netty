@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Netty 定时任务
- *
+ *通过 ScheduledFutureTask, 将用户自定义任务再次包装成一个netty内部的任务
  * @param <V>
  */
 @SuppressWarnings("ComparableImplementedButEqualsNotOverridden")

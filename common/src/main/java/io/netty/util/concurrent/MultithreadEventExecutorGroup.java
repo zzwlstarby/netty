@@ -26,7 +26,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 基于多线程的 EventExecutor ( 事件执行器 )的分组抽象类
- *
+ * MultithreadEventLoopGroup类继承了MultithreadEventExecutorGroup类同时实现了EventLoopGroup接口，
+ * 这个接口继承了EventExecutorGroup接口，允许通道注册和后续处理
  * Abstract base class for {@link EventExecutorGroup} implementations that handles their tasks with multiple threads at
  * the same time.
  */

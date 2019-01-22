@@ -221,6 +221,27 @@ import java.util.concurrent.TimeUnit;
  * }
  * </pre>
  */
+
+/**
+ * Future最早出现于JDK的java.util.concurrent.Future,它用于表示异步操作的结果.由于Netty的Future都是与异步I/O操作相关的,因此命名为ChannelFuture,代表它与Channel操作相关.
+ * 由于Netty中的所有I / O操作都是异步的,因此Netty为了解决调用者如何获取异步操作结果的问题而专门设计了ChannelFuture接口.
+ * 因此,Channel与ChannelFuture可以说形影不离的.
+ *
+ * ChannelFuture有两种状态:未完成(uncompleted)和完成(completed).
+ * 当令Channel开始一个I/O操作时,会创建一个新的ChannelFuture去异步完成操作.
+ * 被创建时的ChannelFuture处于uncompleted状态(非失败,非成功,非取消);一旦ChannelFuture完成I/O操作,ChannelFuture将处于completed状态,结果可能有三种:
+ * 1. 操作成功
+ * 2. 操作失败
+ * 3. 操作被取消(I/O操作被主动终止)
+ *
+ * 虽然可以通过ChannelFuture的get()方法获取异步操作的结果,但完成时间是无法预测的,若不设置超时时间则有可能导致线程长时间被阻塞;若是不能精确的设置超时时间则可能导致I/O操作中断
+ * .因此,Netty建议通过GenericFutureListener接口执行异步操作结束后的回调.
+ *
+ * 虽然可以通过ChannelFuture的get()方法获取异步操作的结果,但完成时间是无法预测的,若不设置超时时间则有可能导致线程长时间被阻塞;
+ * 若是不能精确的设置超时时间则可能导致I/O操作中断.因此,Netty建议通过GenericFutureListener接口执行异步操作结束后的回调.
+ *
+ * 另外,ChannelFuture允许添加一个或多个(移除一个或多个)GenericFutureListener监听接口,方法名:addListener(), addListeners(), removeListener(), removeListeners().
+ */
 public interface ChannelFuture extends Future<Void> {
 
     /**
