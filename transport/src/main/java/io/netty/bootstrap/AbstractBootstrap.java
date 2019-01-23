@@ -47,10 +47,10 @@ import java.util.Map;
  * <p>When not used in a {@link ServerBootstrap} context, the {@link #bind()} methods are useful for connectionless
  * transports such as datagram (UDP).</p>
  *
- * 　AbstractBootstrap是一个工具类，用来配置和启动Channel的
+ * 1.AbstractBootstrap是一个工具类，用来配置和启动Channel的
  *
- * AbstractBootstrap提供了一个ChannelFactory对象用来创建Channel,一个Channel会对应一个EventLoop用于IO的事件处理
- * ，在Channel的整个生命周期中会绑定一个EventLoop,这里可理解给Channel分配一个线程进行IO事件处理，结束后回收该线程，
+ * 2.AbstractBootstrap提供了一个ChannelFactory对象用来创建Channel,一个Channel会对应一个EventLoop用于IO的事件处理，
+ * 在Channel的整个生命周期中会绑定一个EventLoop,这里可理解给Channel分配一个线程进行IO事件处理，结束后回收该线程，
  * 但是AbstractBootstrap没有提供EventLoop而是提供了一个EventLoopGroup，EventLoop继承EventLoopGroup，
  * 在某些情况下可以把EventLoopGroup当EventLoop来用，EventLoopGroup中包含多个Eventloop，当一个连接到达，Netty会注册一个Channel，
  * 然后EventLoopGroup会分配一个EventLoop绑定到这个channel。不管是服务器还是客户端的Channel都需要绑定一个本地端口这就有了SocketAddress类的对象localAddress，
@@ -74,7 +74,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      */
     private volatile SocketAddress localAddress;
     /**
-     * 可选项集合
+     * 可选项集合，参数配置集合
      */
     private final Map<ChannelOption<?>, Object> options = new LinkedHashMap<ChannelOption<?>, Object>();
     /**
@@ -179,6 +179,8 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
 
     /**
      * The {@link SocketAddress} which is used to bind the local "end" to.
+     *
+     * 绑定
      */
     public B localAddress(SocketAddress localAddress) {
         this.localAddress = localAddress;
