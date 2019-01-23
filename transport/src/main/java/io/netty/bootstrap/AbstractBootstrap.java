@@ -46,6 +46,17 @@ import java.util.Map;
  *
  * <p>When not used in a {@link ServerBootstrap} context, the {@link #bind()} methods are useful for connectionless
  * transports such as datagram (UDP).</p>
+ *
+ * 　AbstractBootstrap是一个工具类，用来配置和启动Channel的
+ *
+ * AbstractBootstrap提供了一个ChannelFactory对象用来创建Channel,一个Channel会对应一个EventLoop用于IO的事件处理
+ * ，在Channel的整个生命周期中会绑定一个EventLoop,这里可理解给Channel分配一个线程进行IO事件处理，结束后回收该线程，
+ * 但是AbstractBootstrap没有提供EventLoop而是提供了一个EventLoopGroup，EventLoop继承EventLoopGroup，
+ * 在某些情况下可以把EventLoopGroup当EventLoop来用，EventLoopGroup中包含多个Eventloop，当一个连接到达，Netty会注册一个Channel，
+ * 然后EventLoopGroup会分配一个EventLoop绑定到这个channel。不管是服务器还是客户端的Channel都需要绑定一个本地端口这就有了SocketAddress类的对象localAddress，
+ * Channel有很多选项所有有了options对象LinkedHashMap<channeloption<?>, Object>。怎么处理Channel的IO事件呢，我们添加一个事件处理器ChannelHandler对象。
+ *
+ * AbstractBootstrap这个抽象Builder一共需要有6个部分group、channelFactory、localAddress、options、attrs、handler
  */
 public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C extends Channel> implements Cloneable {
 
@@ -107,6 +118,14 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         return self();
     }
 
+    /**
+     * 本方法作为一个辅助方法，作为建造者模式（builder模式）返回this的一个辅助类。例如group（）方法就是调用self（）返回当前对象。
+     * 这样设计的目的在于可以自由选择设置相关参数而不强求绑定。这样可以根据使用场景进行自由的设置参数。
+     * 但是缺点也是明显的，那就是使用者自己要清楚设置哪些参数。
+     * 该设计模式对我们的最大启发就是设置参数，我们可以将参数定义在一个类中，然后通过链式调用来设置参数。
+     * 我们需要设置哪些参数就调用哪些方法。实际上这个设计模式在我们日常开发中都能使用到
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private B self() {
         return (B) this;
@@ -116,6 +135,12 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
      * The {@link Class} which is used to create {@link Channel} instances from.
      * You either use this or {@link #channelFactory(io.netty.channel.ChannelFactory)} if your
      * {@link Channel} implementation has no no-args constructor.
+     */
+    /**
+     * AbstractBootstrap通过ChannelFactory创建Channel实例，channel(channelClass)方法看起来好像是设置了一个Channel，
+     * 但实际上只是给指定channel设置了默认的ChannelFactory实现，也就是说根据一个channel在bootstrap中设置一个当前channel的一个channelFactory
+     * @param channelClass
+     * @return
      */
     public B channel(Class<? extends C> channelClass) {
         if (channelClass == null) {
