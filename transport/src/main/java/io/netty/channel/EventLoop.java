@@ -13,6 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
+
+/**
+ * 概述：
+ *     该接口同时继承了EventExecutor和EventLoopGroup，因此它既是一个执行器，又是容器。。。
+ *
+ */
 package io.netty.channel;
 
 import io.netty.util.concurrent.OrderedEventExecutor;

@@ -38,6 +38,15 @@ import static io.netty.util.concurrent.AbstractEventExecutor.*;
  */
 public abstract class AbstractEventExecutorGroup implements EventExecutorGroup {
 
+    /**
+     * 这里实现了EventExecutorGroup派发任务的方式，使用next方法取出一EventExecutor, 然后把任务提交给这个executor。
+     * 其他提交认任务的方法实submit, schedule, scheduleAtFixedRate, scheduleWithFixedDelay, invokeAll, invokeAny都和这个类似。
+     */
+    @Override
+    public void execute(Runnable command) {
+        next().execute(command);
+    }
+
     @Override
     public Future<?> submit(Runnable task) {
         return next().submit(task);
@@ -115,9 +124,6 @@ public abstract class AbstractEventExecutorGroup implements EventExecutorGroup {
         return next().invokeAny(tasks, timeout, unit);
     }
 
-    @Override
-    public void execute(Runnable command) {
-        next().execute(command);
-    }
+
 
 }

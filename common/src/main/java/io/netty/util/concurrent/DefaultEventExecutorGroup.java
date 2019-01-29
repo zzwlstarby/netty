@@ -21,6 +21,12 @@ import java.util.concurrent.ThreadFactory;
 /**
  * Default implementation of {@link MultithreadEventExecutorGroup} which will use {@link DefaultEventExecutor} instances
  * to handle the tasks.
+ *
+ *
+ * 概述：netty中默认实现了一个DefaultEventExecutorGroup和DefaultEventExecutor。
+ * DefaultEventexecutorGroup继承于MultithreadEventExecutorGroup，
+ * MultilthreadEventExecutorGroup是线程管理的核心类。它有一系统的构造方法
+ *
  */
 public class DefaultEventExecutorGroup extends MultithreadEventExecutorGroup {
     /**

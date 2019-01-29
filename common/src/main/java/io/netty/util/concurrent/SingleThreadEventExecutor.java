@@ -43,9 +43,19 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
- * 基于单线程的 EventExecutor 抽象类，即一个 EventExecutor 对应一个线程
+ * 概述：
+ *      一个继承了OrderedEventExecutor的抽象类，它会执行所有提交的任务在一个单一的
+ *      线程中而OrderedEventExecutor作为一个标记接口，它会执行所有提交的任务以有序/连续的方式。
+ *
+ *      它也是个抽象类，但是提供了很多重要方法的实现。弄清楚了这个对整个EventExecutor体系都非常有帮助。
+ *      从类名上可知里面只有一个线程，先搞清楚一个线程的处理过程再理解多线程的就轻松些了。
+ *
+ *
+ *
  *
  * Abstract base class for {@link OrderedEventExecutor}'s that execute all its submitted tasks in a single thread.
+ * 基于单线程的 EventExecutor 抽象类，即一个 EventExecutor 对应一个线程
+ *
  */
 public abstract class SingleThreadEventExecutor extends AbstractScheduledEventExecutor implements OrderedEventExecutor {
 

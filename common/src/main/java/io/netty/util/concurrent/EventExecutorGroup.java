@@ -24,16 +24,26 @@ import java.util.concurrent.TimeUnit;
 /**
  * EventExecutor ( 事件执行器 )的分组接口
  *
+ * 概述：
+ *  首先它继承了ScheduleEcecutorService ，因此可以把它看成是一个Task的执行器，另外又实现了Iterable接口，
+ *  就可以看出它的目的也可以当成一个容器（EventExecutor的容器）。方法也都比较基础，无非就是一些提交任务，
+ *  取出可用的EventExecutor，关闭执行器等等。。。
+ *
+ * EventExecutorGroup接口继承了Java并发包的ScheduledExecutorService接口，覆盖了原接口的方法，
+ * 主要区别在于返回值换成了Netty自身的Future实现，另外新添加了几个方法。
+ *
+ * 该接口继承了ScheduledExecutorService接口和Iterable接口,
+ * 对原来的ExecutorService的关闭接口提供了增强,提供了优雅的关闭接口。从接口名称上可以看出它是对多个EventExecutor的集合,提供了对多个EventExecutor的迭代访问接口。 (起始就是一个EventExecutor的容器)
+ *
+ * 所谓的优雅的关闭看下面几个方法的介绍
+ * boolean isShuttingDown():只有当这个EventExecutorGroup容器中所有的EventExecutor,调用shutdownGracefully优雅关闭接口或者shut down后,才会返回true
+ *
  * The {@link EventExecutorGroup} is responsible for providing the {@link EventExecutor}'s to use
  * via its {@link #next()} method. Besides this, it is also responsible for handling their
  * life-cycle and allows shutting them down in a global fashion.
  *
  * EventExecutorGroup通过next()方法负责提供返回一个EventExecutor（事件执行器），
  * 基于这个。它也负责管理EventExecutor（事件执行器）的生命周期，允许以一个全局的方式关闭它们。
- *
- * EventExecutorGroup接口继承了Java并发包的ScheduledExecutorService接口，覆盖了原接口的方法，
- * 主要区别在于返回值换成了Netty自身的Future实现，另外新添加了几个方法。
- *
  */
 
 /**
@@ -42,6 +52,8 @@ import java.util.concurrent.TimeUnit;
 public interface EventExecutorGroup extends ScheduledExecutorService, Iterable<EventExecutor> {
 
     /**
+     * 检查是否已经调用了shutdownGracefully或shutdown方法。
+     *
      * Returns {@code true} if and only if all {@link EventExecutor}s managed by this {@link EventExecutorGroup}
      * are being {@linkplain #shutdownGracefully() shut down gracefully} or was {@linkplain #isShutdown() shut down}.
      *
@@ -51,6 +63,9 @@ public interface EventExecutorGroup extends ScheduledExecutorService, Iterable<E
     boolean isShuttingDown();
 
     /**
+     *
+     *
+     *
      * Shortcut method for {@link #shutdownGracefully(long, long, TimeUnit)} with sensible default values.
      *
      * 快捷的一个通过默认值来实现的正常关闭事件执行器的方法，
@@ -60,6 +75,11 @@ public interface EventExecutorGroup extends ScheduledExecutorService, Iterable<E
     Future<?> shutdownGracefully();
 
     /**
+     *优雅地关闭这个executor, 一旦这个方法被调用，isShuttingDown()方法总是总是返回true。和 shutdown方法不同，
+     * 这个方法需要确保在关闭的平静期(由quietPeriod参数决定)没有新的任务被提交，如果平静期有新任务提交，它会接受这个任务，
+     * 同时中止关闭动作，等任务执行完毕后从新开始关闭流程。
+
+     *
      * Signals this executor that the caller wants the executor to be shut down.  Once this method is called,
      * {@link #isShuttingDown()} starts to return {@code true}, and the executor prepares to shut itself down.
      * Unlike {@link #shutdown()}, graceful shutdown ensures that no tasks are submitted for <i>'the quiet period'</i>
@@ -109,9 +129,9 @@ public interface EventExecutorGroup extends ScheduledExecutorService, Iterable<E
     List<Runnable> shutdownNow();
 
     /**
-     * Returns one of the {@link EventExecutor}s managed by this {@link EventExecutorGroup}.
+     * 取出一个EventExecutor, 这个方法要实现派发任务的策略。
      *
-     * 返回被EventExecutorGroup管理的EventExecutor集合的下一个。
+     * Returns one of the {@link EventExecutor}s managed by this {@link EventExecutorGroup}.
      */
     EventExecutor next();
 
