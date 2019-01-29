@@ -39,6 +39,10 @@ import static io.netty.util.internal.ObjectUtil.checkNotNull;
 
 /**
  * The default {@link ChannelConfig} implementation.
+ *
+ * 概述：
+ *      主要和channelOption结合存储channel相关的默认配置
+ *
  */
 public class DefaultChannelConfig implements ChannelConfig {
     private static final MessageSizeEstimator DEFAULT_MSG_SIZE_ESTIMATOR = DefaultMessageSizeEstimator.DEFAULT;
@@ -47,8 +51,11 @@ public class DefaultChannelConfig implements ChannelConfig {
 
     /**
      * {@link #autoRead} 的原子更新器
+     *
+     * 线程安全的更新DefaultChannelConfig的autoRead属性值
      */
-    private static final AtomicIntegerFieldUpdater<DefaultChannelConfig> AUTOREAD_UPDATER = AtomicIntegerFieldUpdater.newUpdater(DefaultChannelConfig.class, "autoRead");
+    private static final AtomicIntegerFieldUpdater<DefaultChannelConfig> AUTOREAD_UPDATER =
+            AtomicIntegerFieldUpdater.newUpdater(DefaultChannelConfig.class, "autoRead");
 
     private static final AtomicReferenceFieldUpdater<DefaultChannelConfig, WriteBufferWaterMark> WATERMARK_UPDATER =
             AtomicReferenceFieldUpdater.newUpdater(

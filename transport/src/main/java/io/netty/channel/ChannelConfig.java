@@ -61,6 +61,10 @@ import java.util.Map;
  * More options are available in the sub-types of {@link ChannelConfig}.  For
  * example, you can configure the parameters which are specific to a TCP/IP
  * socket as explained in {@link SocketChannelConfig}.
+ *
+ *
+ * 概述：
+ *      对于ChannelConfig来说他是对Channel一个整个配置的信息。
  */
 public interface ChannelConfig {
 

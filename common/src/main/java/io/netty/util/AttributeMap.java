@@ -24,9 +24,14 @@ package io.netty.util;
  *
  * 实现当前接口的方法必须时线程安全的
  *
- * 谁实现了AttributeMap接口？
+ * 概述：
+ *      谁实现了AttributeMap接口？
+        答案是所有的Channel和ChannelHandlerContext，
  *
- * 答案是所有的Channel和ChannelHandlerContext，
+ *      AttributeMap是存储属性的一个map
+ *
+ *      AttributeKey作为AttributeMap的key，Attribute作为AttributeMap的value：
+ *      AttributeMap 、 Attribute 、 AttributeKey 分别对应Map、value、Key，netty对他们进行了一次封装。
  */
 public interface AttributeMap {
     /**

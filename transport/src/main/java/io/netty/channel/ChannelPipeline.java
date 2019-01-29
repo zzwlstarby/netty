@@ -216,6 +216,16 @@ import java.util.NoSuchElementException;
  *
  * 概述：
  *      ChannelPipeline的作用就是合理安排ChannelHandler去工作
+ *
+ *      在ChannelPipeline中，每一个handler都要负责将Netty事件传递给下一个handler，
+ *      为此，Netty提供了*Adapter抽象类来提供这些传递功能，这样我们在使用的时候就可以只实现我们感兴趣的方法（事件）。
+ *      除此之外，*Adapter还提供了其他功能，例如：对于消息的编码和解码。
+ *      Netty中提供的几个Adapter：
+            ChannelHandlerAdapter
+ *          ChannelInboundHandlerAdapter
+ *          ChannelOutboundHandlerAdapter
+ *          ChannelDuplexHandlerAdapter
+ *
  */
 public interface ChannelPipeline
         extends ChannelInboundInvoker, ChannelOutboundInvoker, Iterable<Entry<String, ChannelHandler>> {

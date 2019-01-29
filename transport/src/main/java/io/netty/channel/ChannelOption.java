@@ -34,13 +34,26 @@ import java.net.NetworkInterface;
  */
 
 /**
- * ChannelOption 主要是用于配置netty中一些相关的参数，这些参数的key已经在ChannelOption中以静态变量的方式设置好了，可以直接拿来使用，
- * 并且配置相关的value，如果ChannelOption设置了一个不存在的key，就会以日志的形式提示错误信息，但是不会抛出异常。
+ * 概述：
+ *      ChannelOption 主要是用于配置netty中一些Channel相关的参数，
+ *      这些参数的key已经在ChannelOption中以静态变量的方式设置好了，可以直接拿来使用，
+ *      并且配置相关的value，如果ChannelOption设置了一个不存在的key，就会以日志的形式提示错误信息，但是不会抛出异常。
  *
- * netty 中在创建ServerBootstrap 时，里面会维护一个生成好的LinkedHashMap, 来保存所有的ChannelOption及对应的值
- * 在ServerBootstrap 中放option时，会将这个option对象，及value存放到这个LinkedHashMap当中。
- * 在serverBootstrap 绑定到具体的端口时，init()方法当中，会去将之前的options的信息，绑定到具体channel中
- * ChannelOption主要代表channel相关的一些常量
+ *      netty 中在创建ServerBootstrap 时，里面会维护一个生成好的LinkedHashMap, 来保存所有的ChannelOption及对应的值
+ *      在ServerBootstrap 中放option时，会将这个option对象，及value存放到这个LinkedHashMap当中。
+ *      在serverBootstrap 绑定到具体的端口时，init()方法当中，会去将之前的options的信息，绑定到具体channel中
+ *      ChannelOption主要代表channel相关的一些常量
+ *
+ *      ChannelOption是一种以一种安全的方式配置ChannelConfig，ChannelOption支持的类型个依赖于ChannelConfig的实际类型
+ *      和他所属的传输层的本质。
+ *
+ *      ChannelOption的主要作用是用来存在TCP之类的传输层的一些协议的参数。
+ *
+ *      ChannelOption不存储值，只存储值得类型.为什么ChannelOption是线程安全的，原因就在于此,
+ *      并且ChannelOption不存储值，只是存储值得类型。
+ *
+ *      ChannelOption是用来配置ChannelConfig的
+ *
  * @param <T>
  */
 public class ChannelOption<T> extends AbstractConstant<ChannelOption<T>> {
@@ -123,11 +136,37 @@ public class ChannelOption<T> extends AbstractConstant<ChannelOption<T>> {
     public static final ChannelOption<Boolean> AUTO_CLOSE = valueOf("AUTO_CLOSE");
 
     public static final ChannelOption<Boolean> SO_BROADCAST = valueOf("SO_BROADCAST");
+
+    /**
+     * Channeloption.SO_KEEPALIVE参数对应于套接字选项中的SO_KEEPALIVE，该参数用于设置TCP连接，
+     * 当设置该选项以后，连接会测试链接的状态，这个选项用于可能长时间没有数据交流的连接。当设置该
+     * 选项以后，如果在两小时内没有数据的通信时，TCP会自动发送一个活动探测数据报文。
+     */
     public static final ChannelOption<Boolean> SO_KEEPALIVE = valueOf("SO_KEEPALIVE");
+
+    /**
+     * ChannelOption.SO_SNDBUF参数对应于套接字选项中的SO_SNDBUF，ChannelOption.SO_RCVBUF参数
+     * 对应于套接字选项中的SO_RCVBUF这两个参数用于操作接收缓冲区和发送缓冲区的大小，接收缓冲区用于
+     * 保存网络协议站内收到的数据，直到应用程序读取成功，发送缓冲区用于保存发送数据，直到发送成功。
+     */
     public static final ChannelOption<Integer> SO_SNDBUF = valueOf("SO_SNDBUF");
     public static final ChannelOption<Integer> SO_RCVBUF = valueOf("SO_RCVBUF");
+
+    /**
+     * ChanneOption.SO_REUSEADDR对应于套接字选项中的SO_REUSEADDR，这个参数表示允许重复使用本地地址
+     * 和端口，比如，某个服务器进程占用了TCP的80端口进行监听，此时再次监听该端口就会返回错误，使用该参
+     * 数就可以解决问题，该参数允许共用该端口，这个在服务器程序中比较常使用，比如某个进程非正常退出，该
+     * 程序占用的端口可能要被占用一段时间才能允许其他进程使用，而且程序死掉以后，内核一需要一定的时间才
+     * 能够释放此端口，不设置SO_REUSEADDR就无法正常使用该端口。
+     */
     public static final ChannelOption<Boolean> SO_REUSEADDR = valueOf("SO_REUSEADDR");
     public static final ChannelOption<Integer> SO_LINGER = valueOf("SO_LINGER");
+
+    /**
+     * ChannelOption.SO_BACKLOG对应的是tcp/ip协议listen函数中的backlog参数，函数listen(int socketfd,int backlog)
+     * 用来初始化服务端可连接队列，服务端处理客户端连接请求是顺序处理的，所以同一时间只能处理一个客户端连接，多个客户端来的时候，
+     * 服务端将不能处理的客户端连接请求放在队列中等待处理，backlog参数指定了队列的大小
+     */
     public static final ChannelOption<Integer> SO_BACKLOG = valueOf("SO_BACKLOG");
     public static final ChannelOption<Integer> SO_TIMEOUT = valueOf("SO_TIMEOUT");
 

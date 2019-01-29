@@ -25,9 +25,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * 概述：基于多线程的 EventExecutor ( 事件执行器 )的分组抽象类
- * MultithreadEventLoopGroup类继承了MultithreadEventExecutorGroup类同时实现了EventLoopGroup接口，
- * 这个接口继承了EventExecutorGroup接口，允许通道注册和后续处理
+ * 概述：
+ *      基于多线程的 EventExecutor ( 事件执行器 )的分组抽象类
+ *      MultithreadEventLoopGroup类继承了MultithreadEventExecutorGroup类同时实现了EventLoopGroup接口，
+ *      这个接口继承了EventExecutorGroup接口，允许通道注册和后续处理
+ *
+ *      主要实现了一下两个方面的功能:
+ *      EventExecutor管理: 创建, 结束SingleThreadEventExecutor，EventExecutor的数据是固定的，由传入的参数决定。
+ *      任务派发策略: 实现了EventExecutor选择器，next方法使选择器选中一个Executor。
+ *
+ *      这个类的核心功能都在它的构造方法中实现, 构造方法有三个参数:
  *
  * Abstract base class for {@link EventExecutorGroup} implementations that handles their tasks with multiple threads at
  * the same time.

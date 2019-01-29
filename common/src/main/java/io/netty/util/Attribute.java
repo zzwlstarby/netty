@@ -21,6 +21,9 @@ package io.netty.util;
  *
  * Attribute<?> 用来在channel上记录数据
  * @param <T>   the type of the value it holds.
+ *
+ * 概述：
+ *     作用主要是 存储业务数据对象，比如 在第一个handler 中使用。可以在程序运行当中动态的添加 你的业务数据对象
  */
 public interface Attribute<T> {
 

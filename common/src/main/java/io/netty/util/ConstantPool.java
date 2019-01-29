@@ -32,7 +32,18 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 
 /**
- * 此类主要用作维护某种类型常量的常量池使用。
+ * 概述：
+ *      此类主要用作维护某种类型常量的常量池使用。
+ *
+ *      其中 ConcurrentMap<String, T> constants 成员变量 存放着 系统常量的类型，来看getOrCreate 方法
+ *      创建并返回类型，并且是线程安全，我们来看如何保证线程安全的 putIfAbsent 这个方法 他是util.Concurrent.ConcurrentMap包里的方法，
+ *      这个方法主要是通过 key 如果存在就返回值，如果不存在就返回null，比如两个线程 同时进入getOrCreate 方法里 并且 第一个线程 进行到final T tempConstant = newConstant(nextId(), name);
+ *      而第二个线程 已经执行完   constant = constants.putIfAbsent(name, tempConstant); 这步，也就是说
+ *      由于此时根据name 这个key 还并没有值 返回为Null， 此时 继续 if (constant == null) { return tempConstant;  }
+ *      我们直接返回 刚才第二个线程 NEW出的  final T tempConstant = newConstant(nextId(), name); 这个值，再看第一个线程 执行 到 
+ *      constant = constants.putIfAbsent(name, tempConstant); 返回的是第二个线程 刚存进去的值，这样通过 两个 
+ *      if (constant == null) 与ConcurrentMap 就能保证 此方法的线程安全
+
  * @param <T>
  */
 public abstract class ConstantPool<T extends Constant<T>> {
@@ -82,6 +93,9 @@ public abstract class ConstantPool<T extends Constant<T>> {
      * 根据名称获取已经存在的常量对象，如果不存在则线程安全的创建一个常量对象。
      *
      * @param name the name of the {@link Constant}
+     *
+     * 概述：
+     *     通过name得到一个已近存在的constant ，没有的话直接创建，线程安全的
      */
     private T getOrCreate(String name) {
         T constant = constants.get(name);
@@ -89,7 +103,7 @@ public abstract class ConstantPool<T extends Constant<T>> {
             final T tempConstant = newConstant(nextId(), name);
             //ConcurrentHashMap单独的读写操作(get,put,putIfAbsent...)是完全线程安全且一致的
             constant = constants.putIfAbsent(name, tempConstant);
-            if (constant == null) {
+            if (constant == null) {//考虑多线程的时候，二次判空处理
                 return tempConstant;
             }
         }

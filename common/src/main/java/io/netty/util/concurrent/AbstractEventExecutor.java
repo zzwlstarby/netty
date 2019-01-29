@@ -150,6 +150,13 @@ public abstract class AbstractEventExecutor extends AbstractExecutorService impl
         return new PromiseTask<T>(this, callable);
     }
 
+    /**
+     * 不支持schedule, scheduleAtFixedRate, scheduleWithFixedDelay方法，这几个方法都会抛出UnsupportedOperationException异常。
+     * @param command
+     * @param delay
+     * @param unit
+     * @return
+     */
     @Override
     public ScheduledFuture<?> schedule(Runnable command, long delay,
                                        TimeUnit unit) {

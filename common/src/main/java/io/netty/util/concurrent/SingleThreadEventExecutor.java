@@ -66,10 +66,16 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
      */
     static final int DEFAULT_MAX_PENDING_EXECUTOR_TASKS = Math.max(16, SystemPropertyUtil.getInt("io.netty.eventexecutor.maxPendingTasks", Integer.MAX_VALUE));
 
+    //初始状态，SingleThreadEventExecutor 实例被创建时处于这个状态，这个时候只是创建了一个线程，这个线程还没有运行。
     private static final int ST_NOT_STARTED = 1; // 未开始
+    // 运行状态，ST_NOT_STARTED时，提交的第一个任务会把它变成这个状态，线程已经开发运行。
     private static final int ST_STARTED = 2; // 已开始
+    //正在执行关闭操作。线程主循环run方法返回或抛出异常，或调用shutdownGracefully 都会变成这个状态。
     private static final int ST_SHUTTING_DOWN = 3; // 正在关闭中
+    // 已经关闭。调用shutdown会变成这个状态。
     private static final int ST_SHUTDOWN = 4; // 已关闭isShutdown
+
+    //已经结束。这个是最终状态，ST_SHUTTING_DOWN和ST_SHUTDOWN 状态的过程执行完毕后会变成这个状态。
     private static final int ST_TERMINATED = 5; // 已经终止
 
     private static final Runnable WAKEUP_TASK = new Runnable() {
@@ -788,6 +794,10 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         }
     }
 
+    /**
+     * 是否处于SHUTDOWN状态
+     * @return
+     */
     @Override
     public boolean isShuttingDown() {
         return state >= ST_SHUTTING_DOWN;
@@ -878,6 +888,18 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         return isTerminated();
     }
 
+    /**
+     * public方法execute, 是提供给用户提交实时任务的方法，它的调用栈如下:
+     * execute
+     * addTask
+     * offerTask
+     * taskQueue.offer
+     *
+     * execute最终会调用taskQueue的offer方法把任务放到队列中排队，在此之前，如果检测到处于SHUTDOWN状态，
+     * 就拒绝这个任务，或offer失败也会拒绝任务。
+     *
+     * @param task
+     */
     @Override
     public void execute(Runnable task) {
         if (task == null) {
@@ -1074,6 +1096,9 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         });
     }
 
+    /**
+     * 默认线程的属性bean，由于是private的，所以只能用于SingleThreadEventExecutor
+     */
     private static final class DefaultThreadProperties implements ThreadProperties {
 
         private final Thread t;

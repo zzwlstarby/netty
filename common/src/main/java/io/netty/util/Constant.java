@@ -20,7 +20,11 @@ package io.netty.util;
  *
  * 通过{@code ==}运算符可以安全比较的一个单例。由{@link ConstantPool}创建和管理。
  *
- * 此接口支撑了netty上层应用所需要的所有常量的常量体系。netty本身需要的常量都是通过实现Constant接口的类来保存的。
+ * 概述：
+ *      此接口支撑了netty上层应用所需要的所有常量的常量体系。
+ *      netty本身需要的常量都是通过实现Constant接口的类来保存的。
+ *
+ *     是单例的并且是可以用过“==”安全比较的。使用ConstantPool创建和管理
  */
 public interface Constant<T extends Constant<T>> extends Comparable<T> {
 
