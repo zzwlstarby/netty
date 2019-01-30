@@ -35,6 +35,24 @@ import io.netty.util.internal.logging.InternalLoggerFactory;
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
+/**
+ * 概述：
+ *      AbstractChannelHandlerContext为ChannelHandlerContext提供了很多默认实现；实现ChannelInboundInvoker和ChannelOutboundInvoker使得context
+ *      可以传播入站事件和出站事件，实现ResourceLeakHint使得ChannelHandlerContext具备内存泄漏检测的能力
+ *
+ *      AbstractChannelHandlerContext具体实现了ChannelHandlerContext接口的功能，并进行了相应扩展。
+ *
+ *      ChannelHandlerContext的fireXXX方法：回调事件的发起方法。会产生相应回调事件并将其交给pipeline中的下一个处理节点。此方法提供给用户实现的
+ *      ChannelHandler使用，用于将回调事件向pipeline中的下一个节点传递。
+ *
+ *
+ *      AbstractChannelHandlerContext的static invokeXXX(AbstractChannelHandlerContext next)方法：封装next.invokeXXX()的逻辑并交给EventLoop的
+ *      IO线程执行。
+ *      ChannelHandlerContext的invokeXXX()方法：回调事件执行方法。执行节点中事件处理器ChannelHandler的XXX方法，实际处理回调事件。
+ *
+ *
+
+ */
 abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
         implements ChannelHandlerContext, ResourceLeakHint {
 
@@ -46,14 +64,18 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
      */
     private static final int INIT = 0; // 初始化
     /**
+     * 用于标识handler添加的中间状态，表示handler已添加到pipeline链表上，但handlerAdded仍未调用。之所以有这个状态，是因为当ordered为false时，
+     * 此状态的handler也可以处理事；ordered为true，意味着EventExecutor需要根据pipeline中已经添加的handler顺序处理事件；
      * {@link ChannelHandler#handlerAdded(ChannelHandlerContext)} is about to be called.
      */
     private static final int ADD_PENDING = 1; // 添加准备中
     /**
+     * ChannelHandler的handlerAdded已经被调用，此状态的handler可以处理事件；
      * {@link ChannelHandler#handlerAdded(ChannelHandlerContext)} was called.
      */
     private static final int ADD_COMPLETE = 2; // 已添加
     /**
+     * REMOVE_COMPLETE：ChannelHandler的handlerRemoved已经被调用，此状态的handler不能再处理事件。
      * {@link ChannelHandler#handlerRemoved(ChannelHandlerContext)} was called.
      */
     private static final int REMOVE_COMPLETE = 3; // 已移除
@@ -122,6 +144,7 @@ abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
      */
     private Runnable invokeFlushTask;
     /**
+     * AbstractChannelHandlerContext中使用handlerState来标识ChannelHandler的状态。
      * 处理器状态
      */
     private volatile int handlerState = INIT;

@@ -30,6 +30,9 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * Returns {@code true} if and only if the I/O operation was completed
      * successfully
      * 当且仅当I / O操作成功完成*时，才返回{@code true}
+     *
+     * isSuccess方法表示I/O操作是否已经成功的完成。对于上述jdk中Future申明的isDone方法，只能知道I/O是否结束，
+     * 有可能是成功完成、被取消、异常中断。netty中Future的此isSuccess方法能够很好的判断出操作是否正真地成功完成
      */
     boolean isSuccess();
 
@@ -48,6 +51,9 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      *         {@code null} if succeeded or this future is not
      *         completed yet.
      * 如果成功或此未来尚未完成，则返回null。
+     *
+     *
+     * cause方法表示如果I/O操作失败，返回异常信息
      */
     Throwable cause();
 
@@ -70,6 +76,12 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      *
      *将指定的多个监听器添加到此Future中。当这个future {@linkplain #isDone（）done}时，会通知指定的多个监听器。
      *如果此future已完成，则立即通知指定的多个监听器。
+     *
+     * addListener方法会添加特定的监听器到future，这些监听器会在future isDone返回true的时候立刻被通知。
+     * 这是netty中很重要的扩展方法，这里用到了观察者模式
+     *
+     * 为什么future中有get方法来获取异步的结果，这里又扩展了监听器这种方法。如果使用get，我们会考虑到底在什么时候使用，
+     * 因为该方法会阻塞后续逻辑代码，如果我们使用监听器，毫无疑问，会更加优雅地在合理的时间来处理我们的逻辑代码
      *
      */
     Future<V> addListeners(GenericFutureListener<? extends Future<? super V>>... listeners);
@@ -108,6 +120,8 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * failed.
      *
      * 等待这个future，直到它完成，如果这个future失败，重新抛出失败的原因。
+     *
+     * sync方法阻塞直到future完成操作，如果操作失败会重新抛出异常
      */
     Future<V> sync() throws InterruptedException;
 
@@ -217,6 +231,9 @@ public interface Future<V> extends java.util.concurrent.Future<V> {
      * If the cancellation was successful it will fail the future with an {@link CancellationException}.
      *
      * 如果取消成功，则future不抛CancellationException异常。
+     *
+     *
+     * cancel方法的boolean参数表示是否对已经开始执行的操作进行中断
      */
     @Override
     boolean cancel(boolean mayInterruptIfRunning);

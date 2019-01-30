@@ -45,6 +45,23 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Abstract base class for {@link Channel} implementations which use a Selector based approach.
+ *
+ * 概述：
+ *      AbstractNioChannel是一个想要使用Java NIO Selector方法实现的Channel需要继承的抽象类，其内部通过聚合Java Nio的
+ *      几个关键对象来完成，其成员变量的定义即可知：
+ *      private final SelectableChannel ch;
+ *      protected final int readInterestOp;
+ *      volatile SelectionKey selectionKey;
+ *
+ *      ch：当前Channel实例，由于NioSocketChannel和NioServerSocketChannel都继承了SelectableChannel，因此可安全转化
+ *      为SelectableChannel的实例；
+ *      readInterestOp：代码JDK SelectKey的OP_READ；
+ *      selectionKey：Channel注册到EventLoop返回的选择键，由于Channel可能存在多个业务线程并发写的操作，当selectionKey
+ *      发生变化后，需要对其他线程可见，因此声明为volatile保证可见性。
+ *
+ *      AbstractNioChannel中AbstractNioUnsafe主要为了doRegister、doDeregister、doBeginRead、newDirectBuffer、doClose
+ *      等方法提供了默认实现
+ *
  */
 public abstract class AbstractNioChannel extends AbstractChannel {
 
@@ -217,6 +234,9 @@ public abstract class AbstractNioChannel extends AbstractChannel {
     }
 
     /**
+     * 概述：
+     *      定义允许访问底层SelectableChannel的操作；
+     *
      * Special {@link Unsafe} sub-type which allows to access the underlying {@link SelectableChannel}
      */
     public interface NioUnsafe extends Unsafe {
@@ -238,6 +258,10 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         void forceFlush();
     }
 
+    /**
+     * AbstractUnsafe的NIO实现，主要为了doRegister、doDeregister、doBeginRead、newDirectBuffer、doClose等方法提
+     * 供了默认实现，同时实现了NioUnsafe中定义的操作。
+     */
     protected abstract class AbstractNioUnsafe extends AbstractUnsafe implements NioUnsafe {
 
         protected final void removeReadOp() {

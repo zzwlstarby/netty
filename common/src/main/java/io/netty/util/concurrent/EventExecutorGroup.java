@@ -25,18 +25,29 @@ import java.util.concurrent.TimeUnit;
  * EventExecutor ( 事件执行器 )的分组接口
  *
  * 概述：
- *  首先它继承了ScheduleEcecutorService ，因此可以把它看成是一个Task的执行器，另外又实现了Iterable接口，
- *  就可以看出它的目的也可以当成一个容器（EventExecutor的容器）。方法也都比较基础，无非就是一些提交任务，
- *  取出可用的EventExecutor，关闭执行器等等。。。
+ *      首先它继承了ScheduleEcecutorService ，因此可以把它看成是一个Task的执行器，另外又实现了Iterable接口，
+ *      就可以看出它的目的也可以当成一个容器（EventExecutor的容器）。方法也都比较基础，无非就是一些提交任务，
+ *      取出可用的EventExecutor，关闭执行器等等。。。
  *
- * EventExecutorGroup接口继承了Java并发包的ScheduledExecutorService接口，覆盖了原接口的方法，
- * 主要区别在于返回值换成了Netty自身的Future实现，另外新添加了几个方法。
+ *      每个EventExecutor是一个单独的线程，可以执行Runnable任务。EventExecutorGroup相当于一个线程组，用于
+ *      管理和分配一组EventExecutor.我们知道Netty是基于事件驱动的。这样的封装给我们的开发带来了非常好的顺序。
+ *      而且它还封装了定时任务，更加方便我们在一个线程中执行一些定时任务。
  *
- * 该接口继承了ScheduledExecutorService接口和Iterable接口,
- * 对原来的ExecutorService的关闭接口提供了增强,提供了优雅的关闭接口。从接口名称上可以看出它是对多个EventExecutor的集合,提供了对多个EventExecutor的迭代访问接口。 (起始就是一个EventExecutor的容器)
+ *      EventExecutorGroup接口继承了Java并发包的ScheduledExecutorService接口，覆盖了原接口的方法，
+ *      主要区别在于返回值换成了Netty自身的Future实现，另外新添加了几个方法。
  *
- * 所谓的优雅的关闭看下面几个方法的介绍
- * boolean isShuttingDown():只有当这个EventExecutorGroup容器中所有的EventExecutor,调用shutdownGracefully优雅关闭接口或者shut down后,才会返回true
+ *      该接口继承了ScheduledExecutorService接口和Iterable接口,
+ *      对原来的ExecutorService的关闭接口提供了增强,提供了优雅的关闭接口。从接口名称上可以看出它是对多个
+ *      EventExecutor的集合,提供了对多个EventExecutor的迭代访问接口。 (起始就是一个EventExecutor的容器)
+ *
+ *      所谓的优雅的关闭看下面几个方法的介绍
+ *       boolean isShuttingDown():只有当这个EventExecutorGroup容器中所有的EventExecutor,调用shutdownGracefully
+ *       优雅关闭接口或者shut down后,才会返回true
+ *
+ *       netty中默认实现了一个DefaultEventExecutorGroup和DefaultEventExecutor。DefaultEventexecutorGroup继承
+ *       于MultithreadEventExecutorGroup，MultilthreadEventExecutorGroup是线程管理的核心类。它有一系统的构造
+ *       方法，最终执行的构造方法是：
+
  *
  * The {@link EventExecutorGroup} is responsible for providing the {@link EventExecutor}'s to use
  * via its {@link #next()} method. Besides this, it is also responsible for handling their

@@ -27,7 +27,9 @@ import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
  */
 
 /**
- * DefaultAttributeMap实现了AttributeMap接口，AbstractChannel和DefaultChannelHandlerContext通过继承DefaultAttributeMap也实现了AttributeMap接口
+ * 概述：
+ *      DefaultAttributeMap实现了AttributeMap接口，AbstractChannel和DefaultChannelHandlerContext通过继承DefaultAttributeMap也实
+ *      现了AttributeMap接口
  */
 public class DefaultAttributeMap implements AttributeMap {
 

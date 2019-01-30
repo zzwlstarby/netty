@@ -23,6 +23,13 @@ import java.net.Socket;
 
 /**
  * A duplex {@link Channel} that has two sides that can be shutdown independently.
+ *
+ * 概述：
+ *      DuplexChannel是一种可独立关闭的全双工Channel，其主要定义了如下API：
+ *      boolean isInputShutdown();
+ *      当且仅当远程对等体关闭其输出，而不能从当前Channel获取到更多数据时才会返回True。请注意，该方法的语义与Socket.shutdownInput（）
+ *      和Socket.isInputShutdown（）的语义不同
+ *
  */
 public interface DuplexChannel extends Channel {
     /**

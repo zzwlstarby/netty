@@ -223,24 +223,67 @@ import java.util.concurrent.TimeUnit;
  */
 
 /**
- * Future最早出现于JDK的java.util.concurrent.Future,它用于表示异步操作的结果.由于Netty的Future都是与异步I/O操作相关的,因此命名为ChannelFuture,代表它与Channel操作相关.
- * 由于Netty中的所有I / O操作都是异步的,因此Netty为了解决调用者如何获取异步操作结果的问题而专门设计了ChannelFuture接口.
- * 因此,Channel与ChannelFuture可以说形影不离的.
+ * 概述：
+ *      ChannelFuture的作用是用来保存Channel异步操作的结果。
  *
- * ChannelFuture有两种状态:未完成(uncompleted)和完成(completed).
- * 当令Channel开始一个I/O操作时,会创建一个新的ChannelFuture去异步完成操作.
- * 被创建时的ChannelFuture处于uncompleted状态(非失败,非成功,非取消);一旦ChannelFuture完成I/O操作,ChannelFuture将处于completed状态,结果可能有三种:
- * 1. 操作成功
- * 2. 操作失败
- * 3. 操作被取消(I/O操作被主动终止)
+ *      Future最早出现于JDK的java.util.concurrent.Future,它用于表示异步操作的结果.由于Netty的Future都是与异步I/O操作相关的,
+ *      因此命名为ChannelFuture,代表它与Channel操作相关.
  *
- * 虽然可以通过ChannelFuture的get()方法获取异步操作的结果,但完成时间是无法预测的,若不设置超时时间则有可能导致线程长时间被阻塞;若是不能精确的设置超时时间则可能导致I/O操作中断
- * .因此,Netty建议通过GenericFutureListener接口执行异步操作结束后的回调.
+ *      由于Netty中的所有I / O操作都是异步的,因此Netty为了解决调用者如何获取异步操作结果的问题而专门设计了ChannelFuture接口.
+ *      因此,Channel与ChannelFuture可以说形影不离的.
  *
- * 虽然可以通过ChannelFuture的get()方法获取异步操作的结果,但完成时间是无法预测的,若不设置超时时间则有可能导致线程长时间被阻塞;
- * 若是不能精确的设置超时时间则可能导致I/O操作中断.因此,Netty建议通过GenericFutureListener接口执行异步操作结束后的回调.
+ *      在Netty中所有的I/O操作都是异步的。这意味着任何的I/O调用都将立即返回，而不保证这些被请求的I/O操作在调用结束的时候已经完成。
+ *      取而代之地，你会得到一个返回的ChannelFuture实例，这个实例将给你一些关于I/O操作结果或者状态的信息。
  *
- * 另外,ChannelFuture允许添加一个或多个(移除一个或多个)GenericFutureListener监听接口,方法名:addListener(), addListeners(), removeListener(), removeListeners().
+ *      对于一个ChannelFuture可能已经完成，也可能未完成。当一个I/O操作开始的时候，一个新的future对象就会被创建。在开始的时候，
+ *      新的future是未完成的状态－－它既非成功、失败，也非被取消，因为I/O操作还没有结束。如果I/O操作以成功、失败或者被取消中的
+ *      任何一种状态结束了，那么这个future将会被标记为已完成，并包含更多详细的信息（例如：失败的原因）。请注意，即使是失败和被
+ *      取消的状态，也是属于已完成的状态。
+ *
+ *      各种各样的方法被提供，用来检查I/O操作是否已完成、等待完成，并寻回I/O操作的结果。它同样允许你添加ChannelFutureListener，
+ *      以便于在I/O操作完成的时候，你能够获得通知。
+ *
+ *      ChannelFuture有两种状态:未完成(uncompleted)和完成(completed).
+ *      当令Channel开始一个I/O操作时,会创建一个新的ChannelFuture去异步完成操作.
+ *      被创建时的ChannelFuture处于uncompleted状态(非失败,非成功,非取消);一旦ChannelFuture完成I/O操作,ChannelFuture将处于c
+ *      ompleted状态,结果可能有三种:
+ *      1. 操作成功
+ *      2. 操作失败
+ *      3. 操作被取消(I/O操作被主动终止)
+ *
+ *      虽然可以通过ChannelFuture的get()方法获取异步操作的结果,但完成时间是无法预测的,若不设置超时时间则有可能导致线程长时间被阻塞;
+ *      若是不能精确的设置超时时间则可能导致I/O操作中断因此,Netty建议通过GenericFutureListener接口执行异步操作结束后的回调.
+ *
+ *      虽然可以通过ChannelFuture的get()方法获取异步操作的结果,但完成时间是无法预测的,若不设置超时时间则有可能导致线程长时间被阻塞;
+ *      若是不能精确的设置超时时间则可能导致I/O操作中断.因此,Netty建议通过GenericFutureListener接口执行异步操作结束后的回调.
+ *
+ *      另外,ChannelFuture允许添加一个或多个(移除一个或多个)GenericFutureListener监听接口,方法名:addListener(), addListeners(),
+ *      removeListener(), removeListeners().
+ *
+ *      ChannelFuture的用法
+ *      优先使用addListener 而不是await和sysn
+ *
+ *      优先使用addListener(GenericFutureListener)，而非await()
+ *      当做了一个I/O操作并有任何后续任务的时候，推荐优先使用addListener(GenericFutureListener)的方式来获得通知，而非await()。
+ *      addListener(GenericFutureListener)是非阻塞的。它会把特定的ChannelFutureListener添加到ChannelFuture中，然后I/O线程
+ *      会在I/O操作相关的future完成的时候通知监听器。ChannelFutureListener会利于最佳的性能和资源的利用，因为它一点阻塞都没有。
+ *      然而，如果你不使用基于事件驱动的编程方式，去实现一个后续式的逻辑会变得诡异和难于理解。
+ *
+ *      对比来看，await()是一个阻塞的操作。一旦被调用，调用者线程会阻塞，直到操作完成。使用await()来实现一个后续式的逻辑会更容易，
+ *      但是调用者线程会非常没必要的阻塞直到I/O操作完成，并且内部的线程通知是相对来说代价昂贵的。更有甚者，在一些特定的情况下会产生
+ *      死锁
+ *
+ *      确实还是有一些情况在调用await()的时候会更方便的。在这种情况下，请确保你不是在一个I/O线程中调用的await()。否则，为了避
+ *      免死锁的情况，BlockingOperationException将被提出。
+ *
+ *      不要混淆I/O timeout和await timeout
+ *      你在使用Future.await(long)， Future.await(long, TimeUnit)，Future.awaitUninterruptibly(long)，
+ *      或者Future.awaitUninterruptibly(long, TimeUnit)的时候，指定的timeout的值和I/O timeout一点关系都没有。
+ *      如果一个操作超时了，future将会被标记为已完成－失败，
+ *
+ *      ChannelFuture允许添加一个或多个(移除一个或多个)GenericFutureListener监听接口,方法名:addListener(), addListeners(),
+ *      removeListener(), removeListeners().
+ *
  */
 public interface ChannelFuture extends Future<Void> {
 

@@ -40,6 +40,24 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 
 /**
+ * 概述：
+ *      事件处理流，是一个双向链表结构，链表中节点元素为ChannelHandlerContext。
+ *
+ *      新的AbstractNioChannel创建时，会创建该Channel对应的DefaultChannelPipeline，用于处理该Channel对应的回调事件。
+ *
+ *      DefaultChannelPipeline创建时，会自动创建并向链表中添加两个ChannelhandlerContext节点——head和tail。
+ *
+ *      head、tail节点的作用
+ *      head节点既是inBound处理节点，又是outBound处理节点。
+ *      head节点作为pipeline的头结点开始接收并传递inbound事件。并作为pipeline的最后一环最终接收处理outbound事件
+ *      （委托Unsafe进行outbound事件的相关IO操作）。
+ *      tail节点是inBound处理节点。
+ *      tail节点作为pipeline的第一环传递outbound事件，其实就是将outbound事件透传到前一个outbound处理节点。并作为
+ *      pipeline的最后一环最终接收inbound事件，大部分左右是终止inbound事件的传播。
+ *      tail节点的exceptionCaught方法：若最终在用户自定义的处理节点没有捕获处理异常，则在tail节点捕获异常打印警告日志。
+ *      tail节点的channelRead方法：若Channel读入的ByteBuf在流经pipeline过程中没有被消费掉，最终流入了tail节点，
+ *      则将该ByteBuf丢弃回收并打印警告日志。
+ *
  * The default {@link ChannelPipeline} implementation.  It is usually created
  * by a {@link Channel} implementation when the {@link Channel} is created.
  */

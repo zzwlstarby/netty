@@ -28,7 +28,14 @@ package io.netty.channel;
  * method returns automatically. If you are looking for a {@link ChannelInboundHandler} implementation that
  * releases the received messages automatically, please see {@link SimpleChannelInboundHandler}.
  * </p>
- * 有一个直观的 API，并且它的每个方法都可以被重写以挂钩到事件生命周期的恰当点上。因为需要处理所有接收到的数据，所以你重写了 channelRead()方法。在这个服务器应用程序中，你将数据简单地回送给了远程节点
+ *
+ *
+ * 概述：
+ *      有一个直观的 API，并且它的每个方法都可以被重写以挂钩到事件生命周期的恰当点上。因为需要处理所有接收到的数据，所以你重写了 channelRead()方法。
+ *      在这个服务器应用程序中，你将数据简单地回送给了远程节点
+ *
+ *      ChannelInboundHandlerAdapter和ChannelOutboundHandlerAdapter为接口的默认实现类（其实没干什么事），用户通过继承这两个类来实现自己的业务
+ *      处理逻辑。
  */
 public class ChannelInboundHandlerAdapter extends ChannelHandlerAdapter implements ChannelInboundHandler {
 

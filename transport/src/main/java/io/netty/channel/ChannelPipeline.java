@@ -226,6 +226,19 @@ import java.util.NoSuchElementException;
  *          ChannelOutboundHandlerAdapter
  *          ChannelDuplexHandlerAdapter
  *
+ *      当EventLoop的selector监听到某Channel产生了就绪的IO事件，并调用socket API对就绪的IO事件进行操作后，需要将操作
+ *      产生的“IO数据”或“操作结果”告知用户进行相应的业务处理。
+ *      netty将因外部IO事件导致的Channel状态变更（Channel被注册到EventLoop中，Channel状态变为可用，Channel读取到IO
+ *      数据...）或Channel内部逻辑操作（添加ChannelHandler...）抽象为不同的回调事件，并定义了pipeline对Channel的回
+ *      调事件进行流式的响应处理。
+ *      用户可在pipeline中添加多个事件处理器(ChannelHandler)，并通过实现ChannelHandler中定义的方法，对回调事件进行
+ *      定制化的业务处理。ChannelHandler也可以调用自身方法对Channel本身进行操作。
+ *      netty会保证“回调事件在ChannelHandler之间的流转”及“Channel内部IO操作”由EventLoop线程串行执行，用户也可以在
+ *      ChannelHandler中使用自行构建的业务线程进行业务处理。
+ *
+ *      ChannelPipeline接口继承了ChannelInboundInvoker，其实现类DefaultChannelPipeline因此具有发起inbound事件的功能。
+ *      实际通过调用AbstractChannelHandlerContext的静态invokeXXX()方法，产生并从pipeline的head节点开始接收事件。
+ *
  */
 public interface ChannelPipeline
         extends ChannelInboundInvoker, ChannelOutboundInvoker, Iterable<Entry<String, ChannelHandler>> {

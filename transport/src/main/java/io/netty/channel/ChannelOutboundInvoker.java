@@ -21,6 +21,11 @@ import io.netty.util.concurrent.FutureListener;
 import java.net.ConnectException;
 import java.net.SocketAddress;
 
+/**
+ * 概述：
+ *      ChannelOutboundHandler中定义了方法进行Channel内部IO操作（Channel发起bind/connect/close操作，
+ *      Channel监听OP_READ，Channel写IO数据...），供用户在回调方法中使用。
+ */
 public interface ChannelOutboundInvoker {
 
     /**

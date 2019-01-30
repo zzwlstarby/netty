@@ -17,8 +17,12 @@ package io.netty.util.concurrent;
 
 /**
  *
- * 指定一个可修改（可写入）的future
+ * 指定一个可修改（可写入）的future，可以设置当前future状态为成功或失败的扩展功能。
  * Special {@link Future} which is writable.
+ *
+ *
+ * 概述：
+ *      定义了可以标识Future成功或者失败的方法，并且每一个Future只能够被标识一次，如果成功将会去通知之前所定义的listeners
  */
 public interface Promise<V> extends Future<V> {
 

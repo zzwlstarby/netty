@@ -24,6 +24,7 @@ package io.netty.util;
  *
  * 概述：
  *     作用主要是 存储业务数据对象，比如 在第一个handler 中使用。可以在程序运行当中动态的添加 你的业务数据对象
+ *     主要用作AttributeMap的value对象。相当于对map的value的封装
  */
 public interface Attribute<T> {
 

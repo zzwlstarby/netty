@@ -25,8 +25,9 @@ import java.util.EventListener;
  *
  * 监听future的结果。异步操作结果将通过此监听器来通知一次
  *
- * 虽然可以通过ChannelFuture的get()方法获取异步操作的结果,但完成时间是无法预测的,若不设置超时时间则有可能导致线程长时间被阻塞;
- * 若是不能精确的设置超时时间则可能导致I/O操作中断.因此,Netty建议通过GenericFutureListener接口执行异步操作结束后的回调.
+ * 概述：
+ *      虽然可以通过ChannelFuture的get()方法获取异步操作的结果,但完成时间是无法预测的,若不设置超时时间则有可能导致线程长时间被阻塞;
+ *      若是不能精确的设置超时时间则可能导致I/O操作中断.因此,Netty建议通过GenericFutureListener接口执行异步操作结束后的回调.
  */
 public interface GenericFutureListener<F extends Future<?>> extends EventListener {
 

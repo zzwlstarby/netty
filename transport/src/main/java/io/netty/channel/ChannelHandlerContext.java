@@ -122,6 +122,24 @@ import java.nio.channels.Channels;
  * what fundamental differences they have, how they flow in a  pipeline,  and how to handle
  * the operation in your application.
  */
+
+/**
+ * 概述：
+ *      ChannelHandlerContext的主要功能是使ChannelHandler能够与所属ChannelPipeline中的其他ChannelHandler
+ *      进行交互，同时，使ChannelHandler可以在上游或下游传递事件，执行I/O操作，动态修改流水线或使用AttributeKeys
+ *      存储ChannelHandler特有的信息等等。
+ *
+ *      事件处理器上下文，pipeline中的实际处理节点。每个处理节点ChannelHandlerContext中包含一个具体的事件处理器
+ *      ChannelHandler，同时ChannelHandlerContext中也绑定了对应的pipeline和Channel的信息，方便ChannelHandler
+ *      进行调用。
+ *
+ *      ChannelHandlerContext接口继承了ChannelInboundInvoker，其实现类AbstractChannelhandlerContext因此具有
+ *      发起inbound事件的功能。 -->  实际通过调用AbstractChannelHandlerContext的静态invokeXXX()方法，从当前节
+ *      点的下一个节点开始接收事件。
+
+ *      对于inbound事件，因为需要进行业务逻辑处理，因此pipeline的head节点会执行fireXXX()方法将事件透传给后面的用户自
+ *      己实现inbound处理节点，由用户自己实现的ChannelHandler接收事件并回调执行业务逻辑。
+ */
 public interface ChannelHandlerContext extends AttributeMap, ChannelInboundInvoker, ChannelOutboundInvoker {
 
     /**

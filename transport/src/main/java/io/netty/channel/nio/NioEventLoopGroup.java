@@ -31,12 +31,20 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
 
 /**
- * NioEventLoop 的分组实现类
- * NioEventLoopGroup类的构造函数依然如其父类一样清晰易懂，在此不再赘述。比较重要的是实现了抽象方法newChild，用于新建NioEventLoop实例：
+ * 概述：
+ *      NioEventLoop 的分组实现类
+ *      NioEventLoopGroup类的构造函数依然如其父类一样清晰易懂，在此不再赘述。比较重要的是实现了抽象方法newChild，用于新建NioEventLoop实例：
  *
- * executor可以在构造函数中传入，或者使用MultithreadEventExecutorGroup类默认创建的ThreadPerTaskExecutor；
- * 可变参数args依次是SelectorProvider、SelectStrategyFactory和RejectedExecutionHandler，默认值分别为SelectorProvider.provider()，、DefaultSelectStrategyFactory.INSTANCE和RejectedExecutionHandlers.reject()，这些顺着NioEventLoopGroup类的构造函数找到父类MultithreadEventExecutorGroup的构造函数即可理解，在此不再赘述。
-
+ *      executor可以在构造函数中传入，或者使用MultithreadEventExecutorGroup类默认创建的ThreadPerTaskExecutor；
+ *      可变参数args依次是SelectorProvider、SelectStrategyFactory和RejectedExecutionHandler，默认值分别为SelectorProvider.provider()，
+ *      、DefaultSelectStrategyFactory.INSTANCE和RejectedExecutionHandlers.reject()，这些顺着NioEventLoopGroup类的构造函数找到父类
+ *      MultithreadEventExecutorGroup的构造函数即可理解，在此不再赘述。
+ *
+ *      一个NioEventLoopGroup下包含多个NioEventLoop
+ *      每个NioEventLoop中包含有一个Selector，一个taskQueue，一个delayedTaskQueue
+ *      每个NioEventLoop的Selector上可以注册监听多个AbstractNioChannel.ch
+ *      每个AbstractNioChannel只会绑定在唯一的NioEventLoop上
+ *      每个AbstractNioChannel都绑定有一个自己的DefaultChannelPipeline
  *
  * {@link MultithreadEventLoopGroup} implementations which is used for NIO {@link Selector} based {@link Channel}s.
  */

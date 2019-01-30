@@ -15,6 +15,11 @@
  */
 package io.netty.channel;
 
+/**
+ * 概述：
+ *      ChannelInboundHandler中定义了各个回调事件的回调方法，由用户进行具体实现。
+ *      ChannelInboundInvoker接口定义了inbound事件的发起方法fireXXX()，用于发起一个inbound事件。
+ */
 public interface ChannelInboundInvoker {
 
     /**

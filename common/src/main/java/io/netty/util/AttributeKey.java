@@ -20,6 +20,8 @@ package io.netty.util;
  *      它和ChannelOption的上层结构是一样的。都有一个ConstantPool。
  *      和AttributeKey相关的一个组件Attribute
  *
+ *      主要作为AttributeMap的key对象，相当于对map的key的封装
+ *
  * Key which can be used to access {@link Attribute} out of the {@link AttributeMap}. Be aware that it is not be
  * possible to have multiple keys with the same name.
  *

@@ -38,6 +38,34 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 
 /**
+ *
+ * 概述：
+ *      AbstractChannel作为NioSocketChannel和NioServerSocketChannel共同的父类，提供了Channel的很多默认实现，AbstractChannel采用聚合的方
+ *      式封装各种功能，由其成员变量的定义即可知：
+ *      private final Channel parent;
+ *      private final ChannelId id;
+ *      private final Unsafe unsafe;
+ *      private final DefaultChannelPipeline pipeline;
+ *      private final VoidChannelPromise unsafeVoidPromise = new VoidChannelPromise(this, false);
+ *      private final CloseFuture closeFuture = new CloseFuture(this);
+ *      private volatile SocketAddress localAddress;
+ *      private volatile SocketAddress remoteAddress;
+ *      private volatile EventLoop eventLoop;
+ *
+ *      parent：代表父类Channel；
+ *      id：采用默认方式生成全局唯一的id；
+ *      unsafe：Unsafe实例，用于执行实际的I/O操作；
+ *      pipeline：当前Channel对应的DefaultChannelPipeline；
+ *      eventLoop：当前Channel注册的EventLoop，主要负责执行Channel生命周期内的各种操作；
+ *      localAddress：每个Channel绑定的本地地址，可为空；
+ *      remoteAddress：Channel连接的远程服务地址。
+ *
+ *      AbstractChannel中聚合了所有Channel使用的能力对象，由AbstractChannel提供初始化和统一封装，如果功能和子类强相关，则由子类进行实现
+ *
+ *      AbstractChannel为Channel中提供的网络I/O操作均提供了默认实现，这些网络I/O操作直接调用了DefaultChannelPipeline中的相关方法。Netty
+ *      基于事件驱动，也就是说当Channel进行I/O操作时会产生对应的I/O事件，然后驱动事件在ChannelPipeline中传播，由对应的ChannelHandler对
+ *      感兴趣的事件进行拦截和处理，然后再由Unsafe中定义的相关方法完成实际的I/O功能。
+ *
  * A skeletal {@link Channel} implementation.
  */
 public abstract class AbstractChannel extends DefaultAttributeMap implements Channel {
@@ -450,6 +478,9 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
     }
 
     /**
+     * 概述：
+     *      为Unsafe定义的大部分方法提供了默认实现，如register、bind、connect等等。
+     *
      * {@link Unsafe} implementation which sub-classes must extend and use.
      */
     protected abstract class AbstractUnsafe implements Unsafe {

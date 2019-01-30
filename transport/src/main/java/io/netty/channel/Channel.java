@@ -75,6 +75,50 @@ import java.net.SocketAddress;
  * released in a proper way, i.e. filehandles.
  *
  * 概述：
+ *      首先强调一点:NIO的Channel与Netty的Channel不是一个东西!
+ *      Netty重新设计了Channel接口,并且给予了很多不同的实现。Channel时Netty的网络抽象类,除了NIO中Channel所包含的网络I/O操作,
+ *      主动建立/关闭连接,获取双方网络地址的功能外,还包含了Netty框架的功能,例如:获取Channel的EventLoop\Pipeline等。
+ *
+ *      Channel接口是能与一个网络套接字(或组件)进行I/0操作(读取\写入\连接\绑定)的纽带.
+ *      通过Channel可以获取连接的状态(是否连接/是否打开),配置通道的参数(设置缓冲区大小等),进行I/O操作
+ *
+ *      Channel的基本方法
+ *      id():返回此通道的全局唯一标识符.
+ *      isActive():如果通道处于活动状态并连接,则返回true.
+ *      isOpen():如果通道打开并且可能稍后激活,则返回true.
+ *      isRegistered():如果通道注册了EventLoop，则返回true。
+ *      config():返回关于此通道的配置.
+ *      localAddress():返回此通道绑定的本地地址.
+ *      pipeline():返回分派的ChannelPipeline.
+ *      remoteAddress():返回此通道连接到的远程地址.
+ *      flush():请求通过ChannelOutboundInvoker将所有挂起的消息输出.
+ *
+ *      关于Channel的释放
+ *       当Channel完成工作后,需要调用ChannelOutboundInvoker.close()或ChannelOutboundInvoker.close(ChannelPromise)释放所有资源.
+ *       这样做是为了确保所有资源(文件句柄)都能够得到释放
+ *
+ *       Channel是由netty抽象出来的网络I/O操作的接口，作为Netty传输的核心，负责处理所有的I/O操作。Channel提供了一组用于传输的API，
+ *       主要包括网络的读/写，客户端主动发起连接、关闭连接，服务端绑定端口，获取通讯双方的网络地址等；同时，还提供了与netty框架相关
+ *       的操作，如获取channel相关联的EventLoop、pipeline等。
+ *
+ *       一个Channel可以拥有父Channel，服务端Channel的parent为空，对客户端Channel来说，它的parent就是创建它的ServerSocketChannel。
+ *       当一个Channel相关的网络操作完成后，请务必调用ChannelOutboundInvoker.close（）或ChannelOutboundInvoker.close（ChannelPromise）
+ *       来释放所有资源，如文件句柄。
+ *
+ *       每个Channel都会被分配一个ChannelPipeline和ChannelConfig。ChannelConfig主要负责Channel的所有配置，并且支持热更新。此外，每个Channel
+ *       都会绑定一个EventLoop，该通道整个生命周期内的事件都将由这个特定EventLoop负责处理。
+ *
+ *       Channel是独一无二的，所以为了保证顺序将Channel声明为Comparable的一个子接口。如果两个Channel实例返回了相同的hashcode，
+ *       那么AbstractChannel中compareTo()方法的实现将会抛出一个Error。
+ *
+ *
+ *       在netty中，所有的I/O操作都是异步的，这些操作被调用将立即返回一个ChannelFuture实例，用户通过ChannelFuture实例获取操作的结果。
+ *
+ *
+ *       Channel的子类非常多，按协议分类来看，则有基于TCP、UDP、SCTP的Channel，如基于UDP协议的DatagramChannel；按底层I/O模型来看，
+ *       分别有基于传统阻塞型I/O模型的Channel，基于java NIO selector模型的Channel，基于FreeBSD I/O复用模型KQueue的Channel，基于
+ *       Linux Epoll边缘触发模型实现的Channel；按功能来看，主要分为客户端Channel和服务端Channel，常用的有客户端NioSocketChannel和
+ *       服务端NioServerSocketChannel，两者分别封装了java.nio中包含的 ServerSocketChannel和SocketChannel的功能
  *
  */
 public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparable<Channel> {
@@ -179,6 +223,10 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
     SocketAddress remoteAddress();
 
     /**
+     * 主动关闭当前连接，close操作会触发链路关闭事件，该事件会级联触发ChannelPipeline中ChannelOutboundHandler.close（ChannelHandlerContext，ChannelPromise）
+     * 方法被调用；区别在于方法2提供了ChannelPromise实例，用于设置close操作的结果，无论成功与否。
+     *
+     *
      * Returns the {@link ChannelFuture} which will be notified when this
      * channel is closed.  This method always returns the same future instance.
      *
@@ -235,13 +283,39 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
      */
     ByteBufAllocator alloc();
 
+    /**
+     * 从当前Channel中读取数据到第一个inbound缓冲区中，如果读取数据，触发ChannelInboundHandler.channelRead（ChannelHandlerContext，Object）
+     * 事件；当读取完成后，触发channelReadComplete事件，这样业务的ChannelHandler可以决定是否需要继续读取数据。同时，该操作会触发outbound事件，
+     * 该事件会级联触发ChannelPipeline中ChannelHandler.read（ChannelHandlerContext）方法被调用。
+     * @return
+     */
     @Override
     Channel read();
 
+    /**
+     * 将write操作写入环形数组中的消息全部写入到Channel中，发送给通信对方。该操作会触发outbound事件，该事件会级联触发ChannelPipeline中
+     * ChannelHandler.flush（ChannelHandlerContext）方法被调用。
+     * @return
+     */
     @Override
     Channel flush();
 
     /**
+     * 概述：
+     *      Unsafe接口是Channel的辅助接口，用于执行实际的I/O操作，且必须在I/O线程中执行。该接口不应该被用户代码直接使用，
+     *      仅在netty内部使用。Unsafe定义在Channel内部。
+     *
+     *      由于Unsafe是Channel的内部接口，因此其大多数子类实现也都定义在Channel子类的内部，提供与Channel相关的方法实现。
+     *
+     *
+     *      Unsafe是Channel的内部类，一个Channel对应一个Unsafe。
+     *
+     *      Unsafe用于处理Channel对应网络IO的底层操作。ChannelHandler处理回调事件时产生的相关网络IO操作最终也会委托给
+     *      Unsafe执行。
+     *
+     *      Unsafe接口中定义了socket相关操作，包括SocketAddress获取、selector注册、网卡端口绑定、socket建连与断连、
+     *      socket写数据。这些操作都和jdk底层socket相关。
+     *
      * <em>Unsafe</em> operations that should <em>never</em> be called from user-code. These methods
      * are only provided to implement the actual transport, and must be invoked from an I/O thread except for the
      * following methods:
@@ -265,6 +339,8 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
         RecvByteBufAllocator.Handle recvBufAllocHandle();
 
         /**
+         * 返回绑定到本地的SocketAddress，没有则返回null
+         *
          * Return the {@link SocketAddress} to which is bound local or
          * {@code null} if none.
          *
@@ -273,6 +349,8 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
         SocketAddress localAddress();
 
         /**
+         * 返回绑定到远程的SocketAddress，如果还没有绑定，则返回null。
+         *
          * Return the {@link SocketAddress} to which is bound remote or
          * {@code null} if none is bound yet.
          *
@@ -281,18 +359,29 @@ public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparabl
         SocketAddress remoteAddress();
 
         /**
+         * 注册Channel到多路复用器，并在注册完成后通知ChannelFuture。一旦ChannelPromise成功，
+         * 就可以在ChannelHandler内向EventLoop提交新任务。 否则，任务可能被拒绝也可能不会被拒绝。
+         *
          * Register the {@link Channel} of the {@link ChannelPromise} and notify
          * the {@link ChannelFuture} once the registration was complete.
          */
         void register(EventLoop eventLoop, ChannelPromise promise);
 
         /**
+         * 用于绑定指定的本地Socket地址localAddress，触发outbound事件，
+         * 该事件会级联触发ChannelPipeline中ChannelHandler.bind（ChannelHandlerContext，SocketAddress，ChannelPromise）方法被调用。
+         *
+         *
          * Bind the {@link SocketAddress} to the {@link Channel} of the {@link ChannelPromise} and notify
          * it once its done.
          */
         void bind(SocketAddress localAddress, ChannelPromise promise);
 
         /**
+         *
+         * 客户端使用指定的服务器地址remoteAddress发起连接请求，如果连接由于连接超时而失败，则ChannelFuture将会失败，
+         * 并出现ConnectTimeoutException。 如果由于连接被拒绝而失败，将使用ConnectException。
+         *
          * Connect the {@link Channel} of the given {@link ChannelFuture} with the given remote {@link SocketAddress}.
          * If a specific local {@link SocketAddress} should be used it need to be given as argument. Otherwise just
          * pass {@code null} to it.
