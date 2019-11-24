@@ -111,30 +111,33 @@ are listed below:
 
  * `io.netty.all`
  * `io.netty.buffer` 该项目实现了 Netty 架构图中的 Zero-Copy-Capable Rich Byte Buffer 。buffer 项目，该项目下是 Netty 自行实现的一个 Byte Buffer 字节缓冲区。该包的实现相对于 JDK 自带的 ByteBuffer 有很多优点：无论是 API 的功能，使用体验，性能都要更加优秀。它提供了一系列( 多种 )的抽象定义以及实现，以满足不同场景下的需要。
+ 该项目下是netty自行实现的一个ByteBuf字节缓冲区。该包的实现相对于jdk自带的ByteBuffer有很多优点，无论是API的功能，使用体验，性能都要更有，这些实现满足不同需求的实现类。它提供了一系列的抽象定义以及实现。该项目实现了netty架构图中的Zerocopy ByteBuf；
  * `io.netty.codec` 该项目实现了Netty 架构图中的 Protocol Support 。codec 项目，该项目是协议编解码的抽象与部分实现：JSON、Google Protocol、Base64、XML 等等。另外，它提供了多个子项目，实现不同协议的编解码。例如：codec-dns、codec-haproxy、codec-http、codec-http2、codec-mqtt、codec-redis、codec-memcached、codec-smtp、codec-socks、codec-stomp、codec-xml 等等。
- * `io.netty.codec.dns`
- * `io.netty.codec.haproxy`
- * `io.netty.codec.http`
- * `io.netty.codec.http2`
- * `io.netty.codec.memcache`
- * `io.netty.codec.mqtt`
- * `io.netty.codec.redis`
- * `io.netty.codec.smtp`
- * `io.netty.codec.socks`
- * `io.netty.codec.stomp`
- * `io.netty.codec.xml`
+ 该项目是协议编解码的抽象与实现。通过不同的子项目来实现http/http2/dns/redis/protocolbuffer等不同协议的支持。它与其它协议的客户端包和组件的区别是非常灵活，可以开发一些特定的场景的客户端或者服务端，该项目实现了netty架构图中的Protocal Support。
+    * `io.netty.codec.dns`
+    * `io.netty.codec.haproxy`
+    * `io.netty.codec.http`
+    * `io.netty.codec.http2`
+    * `io.netty.codec.memcache`
+    * `io.netty.codec.mqtt`
+    * `io.netty.codec.redis`
+    * `io.netty.codec.smtp`
+    * `io.netty.codec.socks`
+    * `io.netty.codec.stomp`
+    * `io.netty.codec.xml`
  * `io.netty.common` common 项目，该项目是一个通用的工具类项目，几乎被所有的其它项目依赖使用，它提供了一些数据类型处理工具类，并发编程以及多线程的扩展，计数器等等通用的工具类。
  * `io.netty.handler` handler 项目，该项目是提供内置的连接通道处理器( ChannelHandler )实现类。例如：SSL 处理器、日志处理器等等。另外，它提供了一个子项目 handler-proxy ，实现对 HTTP、Socks 4、Socks 5 的代理转发。
  * `io.netty.handler.proxy`
  * `io.netty.resolver`
  * `io.netty.resolver.dns`
  * `io.netty.transport` 该项是核心项目，实现了 Netty 架构图中 Transport Services、Universal Communication API 和 Extensible Event Model 等多部分内容。transport 项目，该项目是网络传输通道的抽象和实现。它定义通信的统一通信 API ，统一了 JDK 的 OIO、NIO ( 不包括 AIO )等多种编程接口。另外，它提供了多个子项目，实现不同的传输类型。例如：transport-native-epoll、transport-native-kqueue、transport-rxtx、transport-udt 和 transport-sctp 等等。
- * `io.netty.transport.epoll` (`native` omitted - reserved keyword in Java)
- * `io.netty.transport.kqueue` (`native` omitted - reserved keyword in Java)
- * `io.netty.transport.unix.common` (`native` omitted - reserved keyword in Java)
- * `io.netty.transport.rxtx`
- * `io.netty.transport.sctp`
- * `io.netty.transport.udt`
+ 该项目是网络传输通道的抽象和实现，定义通讯的统一通讯API，它统一了jdk的oio，nio和aio等多种编程接口，它提供了多种实现，包括native-epoll,sctp,udt和sctp等子项目实现不同的传输实现类型。该项是核心项目，实现了netty架构图中Transport Services、Universal Communication API和Extensible Event Model等多部分内容。
+   * `io.netty.transport.epoll` (`native` omitted - reserved keyword in Java)
+   * `io.netty.transport.kqueue` (`native` omitted - reserved keyword in Java)
+   * `io.netty.transport.unix.common` (`native` omitted - reserved keyword in Java)
+   * `io.netty.transport.rxtx`
+   * `io.netty.transport.sctp`
+   * `io.netty.transport.udt`
  * `io.netty.example` example 项目，该项目是提供各种 Netty 使用示例，良心开源项目。
  
  * `其它项目` Netty 中还有其它项目，考虑到不是本系列的重点，就暂时进行省略。all ：All In One 的 pom 声明。
@@ -148,10 +151,10 @@ are listed below:
  ````
 
 ## 架构描述
- * Core ：核心部分，是底层的网络通用抽象和部分实现。
+ * Core ：核心部分，是底层的网络通用抽象和部分实现。这部分内容是关键
      *  Extensible Event Model ：可拓展的事件模型。Netty 是基于事件模型的网络应用框架。
      *  Universal Communication API ：通用的通信 API 层。Netty 定义了一套抽象的通用通信层的 API 。
-     *  Zero-Copy-Capable Rich Byte Buffer ：支持零拷贝特性的 Byte Buffer 实现。
+     *  Zero-Copy-Capable Rich Byte Buffer ：支持零拷贝特性的 Byte Buffer 实现。 支持零拷贝能力的字节缓存。 这是netty字节流缓存的关键，支持“零拷贝”技术，以提升性能。
  * Transport Services ：传输( 通信 )服务，具体的网络传输的定义与实现。
      *  Socket & Datagram ：TCP 和 UDP 的传输实现。
      *  HTTP Tunnel ：HTTP 通道的传输实现。

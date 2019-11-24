@@ -38,14 +38,20 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 概述：
- *     为什么ServerBootstrap需要两个EventLoopGroup?
+ *     1.ServerBoostrape往往是用于启动一个netty服务端。它通常使用bind()方法绑定本地的端口上，然后等待客户端的连接，
+ *     它使用两个EventLoopGroup对象（当然这个对象可以引用同一个对象），第一个用于处理它本地socket连接的io事件处理，
+ *     而第二个责负责处理远程客户端的io事件处理。
+ *
+ *     2.为什么ServerBootstrap需要两个EventLoopGroup?
  *     因为在请求量很大的情况下，如果只有一个EventLoopGroup，而这个Group中的EventLoop都忙于处理已经收到的请求，而在合理的时间内不能接收新的请求，那么有些连接请求就会超时而得不到处理。
  *     用两个Group，一个负责接收请求，而另一个负责处理请求，两个Group中的EventLoop不共享，这样所有的请求都可以被接收。
  *     当然也可以只使用一个EventLoopGroup，对于大多数应用来说这样也没问题
  *
- *     Group中可以包含一个或多个EventLoop，每一个Channel创建之后就会与一个EventLoop绑定，由于一个Group中包含的Loop数量通常都会比创建的Channel数量少，
+ *     3.Group中可以包含一个或多个EventLoop，每一个Channel创建之后就会与一个EventLoop绑定，由于一个Group中包含的Loop数量通常都会比创建的Channel数量少，
  *     所以很多Channel将会公用同一个EventLoop，这意味着如果一个EventLoop忙于处理某个Channel，那么它就无法处理其他Channel，
  *     所以，我们在任何情况下都不能阻塞某个EventLoop。
+ *
+ *
  *
  * {@link Bootstrap} sub-class which allows easy bootstrap of {@link ServerChannel}
  *

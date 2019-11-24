@@ -42,17 +42,30 @@ import java.util.Map.Entry;
 
 /**
  * 概述：
- *      Bootstrap的主要作用就是处理程序启动时候的逻辑，通过它你可以配置你的应用。
+ *      1.Bootstrap的主要作用就是处理程序启动时候的逻辑，通过它你可以配置你的应用。
  *      你可以使用Bootstrap连接到某个客户端的ip和port，或者将服务端绑定到某个端口上。
  *      Bootstrap是为客户端准备的，ServerBootstrap是为服务端准备的。
+ *      我们在使用netty4的时候，总是从使用它的两个启动器开始的，它们是我们最熟悉的netty的API，
+ *      也是netty程序的入口，因此我们从启动器来开启研究netty4源码是非常明智的选择，从我们最熟悉的内容开始，
+ *      让我们一起来探究它背后是怎么实现的。
  *
- *      使用Bootstrap还是ServerBootstrap与你使用的协议没有任何关系，只与你的目的有关：你是想创建一个客户端还是服务端。
+ *      2.使用Bootstrap还是ServerBootstrap与你使用的协议没有任何关系，只与你的目的有关：你是想创建一个客户端还是服务端。
  *      两者除了使用场景不同之外，还有一个很关键的不同:客户端Bootstrap使用一个EventLoopGroup，而服务端的使用的是两个。
  *      服务端可以看成是包含两组Channel，一组只包含一个ServerChannel，它表示服务端自己绑定到本地端口的套接字；
  *      另一组则包含了很多Channel，它们代表服务端所收到的所有的连接。
  *
- *      服务端两个EventLoopGroup的协作流程：GroupA的主要目的是：接收外部连接请求，然后将连接转移给GroupB，
+ *      3.Boostrape往往是用于启动一个netty客户端或者UDP的一端。它通常使用connet()方法连接到远程的主机和端口，当然也
+ *      可以通过bind()绑定本地的一个端口，它仅仅需要使用一个EventLoopGroup。
+ *
+ *
+ *      4.服务端两个EventLoopGroup的协作流程：GroupA的主要目的是：接收外部连接请求，然后将连接转移给GroupB，
  *      而GroupB负责这些请求建立的通道的处理。
+ *
+ *      5.Bootstrap和ServerBootstrape这2个类都继承了AbstractBootstrap，因此它们有很多相同的方法和职责。它们都是启动器，
+ *      能够帮助netty使用者更加方便地组装和配置netty，也可以更方便地启动netty应用程序，比使用者自己从头去将netty的各部
+ *      分组装起来要方便地多，降低了使用者的学习和使用成本，它是我们使用netty的入口和最重要的API，可以通过它来连接到一个
+ *      主机和端口上，也可以通过它来绑定到一个本地的端口上，它们两者之间相同之处要大于不同。它们和其它类之间的关系是它将
+ *      netty的其它各类进行组装和配置，它会组合和直接或间接依赖其它的类。
  *
  *
  * A {@link Bootstrap} that makes it easy to bootstrap a {@link Channel} to use
