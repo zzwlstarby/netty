@@ -139,6 +139,29 @@ import java.nio.channels.Channels;
 
  *      对于inbound事件，因为需要进行业务逻辑处理，因此pipeline的head节点会执行fireXXX()方法将事件透传给后面的用户自
  *      己实现inbound处理节点，由用户自己实现的ChannelHandler接收事件并回调执行业务逻辑。
+ *
+ *  1.Handler的上下文环境
+ *  在Netty的设计中，Handler是无状态的，不保存和Channel有关的信息。打个不恰当的比方，Handler就像国际雇佣军一样，谁给钱，给谁打仗。
+ *  Handler的目标，是将自己的处理逻辑做得很完成，可以给不同的Channel使用。
+ *  与之不同的是，Pipeline是有状态的，保存了Channel的关系。
+ *  于是乎，Handler和Pipeline之间，需要一个中间角色，把他们联系起来。这个中间角色是谁呢？
+ *  它就是——ChannelHandlerContext 。
+ *
+ * 2.所以，ChannelPipeline 中维护的，是一个由 ChannelHandlerContext 组成的双向链表。这个链表的头是 HeadContext, 链表的尾是 TailContext。
+ *  而无状态的Handler，作为Context的成员，关联在ChannelHandlerContext 中。
+ *  在对应关系上，每个 ChannelHandlerContext 中仅仅关联着一个 ChannelHandler(即 ChannelHandlerContext和ChannelHandler是一对一的关系)。
+ *
+ *  Context的双向链表的主要代码，在 AbstractChannelHandlerContext类中。该类主要包含一个双向链表节点的前置和后置节点引用 prev、next，
+ *  以及数据引用 handler，相当于链表数据结构中的 Node 节点。
+ *
+ *  无论是哪种类型的handler，Pipeline没有单独和分开的入站和出站链表，都是统一在一个双向链表中进行管理。
+ *
+ *  赘述一下:
+ *  Tail是出站执行流程的启动点，但是，它最后一个入站处理器。
+ *  Hearder，是入站流程的启动起点，但是，它最后一个出站处理器。
+ *  感觉，有点儿饶。容易让人混淆。看完整个的入站流程和出站流程的详细介绍，就清楚了。
+ *
+ *
  */
 public interface ChannelHandlerContext extends AttributeMap, ChannelInboundInvoker, ChannelOutboundInvoker {
 

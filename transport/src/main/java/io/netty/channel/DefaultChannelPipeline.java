@@ -196,6 +196,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return touch ? ReferenceCountUtil.touch(msg, next) : msg;
     }
 
+    //// 使用 AbstractChannelHandlerContext 包裹 ChannelHandler
     private AbstractChannelHandlerContext newContext(EventExecutorGroup group, String name, ChannelHandler handler) {
         return new DefaultChannelHandlerContext(this, childExecutor(group), name, handler);
     }
@@ -286,20 +287,25 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         return addLast(null, name, handler);
     }
 
+
     @Override
     @SuppressWarnings("Duplicates")
     public final ChannelPipeline addLast(EventExecutorGroup group, String name, ChannelHandler handler) {
         final AbstractChannelHandlerContext newCtx;
         synchronized (this) { // 同步，为了防止多线程并发操作 pipeline 底层的双向链表
-            // 检查是否有重复 handler
+            // 检查是否有重复 handler, // 检查，若不是 Sharable，而且已经被添加到其他 pipeline，则抛出异常
             checkMultiplicity(handler);
 
             // 创建节点名
-            // 创建节点
+            // 创建节点 // 构建 AbstractChannelHandlerContext 节点
             newCtx = newContext(group, filterName(name, handler), handler);
 
-            // 添加节点
+            // 添加节点  // 添加到链表尾部
             addLast0(newCtx);
+
+
+            // registered 为 false 表示 channel 尚未注册到 EventLoop 上。
+            // 添加一个任务到 PendingHandlerCallback 上，后续注册完毕，再调用 ChannelHandler.handlerAdded
 
             // pipeline 暂未注册，添加回调。再注册完成后，执行回调。详细解析，见 {@link #invokeHandlerAddedIfNeeded} 方法。
             // If the registered is false it means that the channel was not registered on an eventloop yet.
@@ -313,8 +319,11 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                 return this;
             }
 
+            // registered 为 true，则立即调用 ChannelHandler.handlerAdded
             // 不再 EventLoop 的线程中，提交 EventLoop 中，执行回调用户方法
             EventExecutor executor = newCtx.executor();
+
+            // inEvent 用于判断当前线程是否是 EventLoop 线程。执行 ChannelHandler 时，必须在对应的 EventLoop 线程池中执行。
             if (!executor.inEventLoop()) {
                 // 设置 AbstractChannelHandlerContext 准备添加中
                 newCtx.setAddPending();
@@ -1390,10 +1399,14 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
     }
 
+    /**
+     * TailContext 只能作为入站处理器
+     */
     // A special catch-all handler that handles both bytes and messages.
     final class TailContext extends AbstractChannelHandlerContext implements ChannelInboundHandler {
 
         TailContext(DefaultChannelPipeline pipeline) {
+            //在TailContext，则调用父类构造器的第四个参数（inbound）的值为true，表示Tail是一个入站类型的Context
             super(pipeline, null, TAIL_NAME, true, false);
             setAddComplete();
         }
@@ -1451,12 +1464,17 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
     }
 
+
+    /**
+     * HeadContext 即可以是出站处理器也可以是入站处理器
+     */
     final class HeadContext extends AbstractChannelHandlerContext
             implements ChannelOutboundHandler, ChannelInboundHandler {
 
         private final Unsafe unsafe;
 
         HeadContext(DefaultChannelPipeline pipeline) {
+            //在HeadContext，则调用父类构造器的第五个参数（outbound）的值为true，表示Head是一个出站类型的Context
             super(pipeline, null, HEAD_NAME, false, true);
             unsafe = pipeline.channel().unsafe();
             setAddComplete();

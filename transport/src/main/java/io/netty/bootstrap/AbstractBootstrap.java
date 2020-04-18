@@ -366,6 +366,13 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         }
     }
 
+
+    /**
+     * Channel向EventLoop注册的过程，是在启动时进行的。注册的入口代码，在启动类AbstractBootstrap.initAndRegister 方法中。
+     * 完整的注册调用流程如下:https://img2018.cnblogs.com/blog/1485398/201810/1485398-20181025005659425-127341228.png
+     *注册流程的关键代码关键代码如下，主要在AbstractChannel类中：
+     * @return
+     */
     final ChannelFuture initAndRegister() {
         Channel channel = null;
         try {

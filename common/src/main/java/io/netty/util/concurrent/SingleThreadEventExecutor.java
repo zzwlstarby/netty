@@ -98,6 +98,8 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
     /**
      * {@link #state} 字段的原子更新器
+     * STATE_UPDATER 是 SingleThreadEventExecutor 内部维护的一个属性, 它的作用是标识当前的 thread 的状态。在初始的时候,
+     * STATE_UPDATER == ST_NOT_STARTED, 因此第一次调用 startThread() 方法时, 就会进入到 if 语句内, 进而调用到 thread.start().
      */
     private static final AtomicIntegerFieldUpdater<SingleThreadEventExecutor> STATE_UPDATER =AtomicIntegerFieldUpdater.newUpdater(SingleThreadEventExecutor.class, "state");
     /**
@@ -113,6 +115,9 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     private final Queue<Runnable> taskQueue;
     /**
      * 线程
+     * 线程什么时候启动呢？
+     *
+     * 在reactor模式中，线程是轮询用的。所以，Reactor线程的启动，一般在channel的注册之后。
      */
     private volatile Thread thread;
     /**

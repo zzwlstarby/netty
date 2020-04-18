@@ -19,6 +19,23 @@ package io.netty.channel;
  * {@link ChannelHandler} which adds callbacks for state changes. This allows the user
  * to hook in to state changes easily.
  */
+
+/**
+ *1. ChannelInboundHandler入站处理器
+ * 当Java NIO事件进站到Channel时，产生一的一系列事件将由ChannelHandler所对应的API处理。
+ * 当查询到Java NIO底层Channel的就绪事件时，通过一系列的ChannelInboundHandler处理器，完成底层就绪事件的处理。
+ * 比方说底层连接建立事件、底层连接断开事件、从底层读写就绪事件等等。
+ *
+ *2.入站（inbound）处理通常由底层Java NIO channel触发，主要事件如下：
+ * 1. 注册事件 fireChannelRegistered。
+ * 2. 连接建立事件 fireChannelActive。
+ * 3. 读事件和读完成事件 fireChannelRead、fireChannelReadComplete。
+ * 4. 异常通知事件 fireExceptionCaught。
+ * 5. 用户自定义事件 fireUserEventTriggered。
+ * 6. Channel 可写状态变化事件 fireChannelWritabilityChanged。
+ * 7. 连接关闭事件 fireChannelInactive。
+ *
+ */
 public interface ChannelInboundHandler extends ChannelHandler {
 
     /**

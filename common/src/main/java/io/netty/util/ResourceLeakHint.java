@@ -18,6 +18,8 @@ package io.netty.util;
 
 /**
  * A hint object that provides human-readable message for easier resource leak tracking.
+ *
+ * 提示对象，提供了易于理解的消息，可以更轻松地跟踪资源泄漏。
  */
 public interface ResourceLeakHint {
 

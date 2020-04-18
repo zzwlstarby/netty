@@ -549,6 +549,13 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
             }
 
             // 设置 Channel 的 eventLoop 属性
+            /**
+             * 在这个 AbstractChannel#AbstractUnsafe.register 中，会将一个 EventLoop 赋值给 AbstractChannel 内部的 eventLoop 字段,
+             * 到这里就完成了 EventLoop 与 Channel 的关联过程.
+             * 反过来说：这一句，将 Channel 与对应的 EventLoop 关联和绑定，也就是说， 每个 Channel 都会关联一个特定的 EventLoop。
+             * 在关联好 Channel 和 EventLoop 后, 会继续调用底层的 Java NIO SocketChannel 的 register 方法, 将底层的 Java NIO SocketChannel 注册到指定的 selector 中。
+             * 庆祝下， 通过这两步, 就完成了 Netty Channel 的注册过程。 从上到下，全部关联了哈。
+             */
             AbstractChannel.this.eventLoop = eventLoop;
 
             // 在 EventLoop 中执行注册逻辑

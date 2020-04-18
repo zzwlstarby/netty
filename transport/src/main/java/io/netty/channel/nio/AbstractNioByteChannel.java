@@ -148,6 +148,10 @@ public abstract class AbstractNioByteChannel extends AbstractNioChannel {
             }
         }
 
+        /**
+         * 在AbstractNioByteChannel 中，可以找到 unsafe.read( ) 调用的实现代码。 unsafe.read( )负责的是 Channel 的底层数据的
+         * IO 读取，并且将读取的结果，dispatch（分派）给最终的Handler。
+         */
         @Override
         @SuppressWarnings("Duplicates")
         public final void read() {

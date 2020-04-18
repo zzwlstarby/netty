@@ -191,7 +191,37 @@ import java.lang.annotation.Target;
  *
  *      ChannelHandler可以看作是用于处理在ChannelPipeline中传输的数据的工具。但它们的作用远不止这些。
  *
+ * 1.Reactor模式是Netty的基础和灵魂，掌握了经典的Reactor模式实现，彻底掌握Netty就事半功倍了。《Reactor模式（netty源码死磕3）》对Reactor模式的经典实现，
+ * 进行了详细介绍。作为本文的阅读准备，可以去温习一下。
+ * Reactor模式的两个重要的组件，一个是Reactor反应器，在Netty中的对应的实现是EventLoop，在文章《EventLoop（netty源码死磕4）》中，已经有了非常详细的介绍。
+ * 此文聚焦于Reactor模式的另一个重要的组成部分Handler。
  *
+ * 2.Handler在经典Reactor中的角色
+ *  在Reactor经典模型中，Reactor查询到NIO就绪的事件后，分发到Handler，由Handler完成NIO操作和计算的操作。
+ *  Handler主要的操作为Channel缓存读、数据解码、业务处理、写Channel缓存，然后由Channel（代表client）发送到最终的连接终端。
+ *
+ *  Handler在Netty中的坐标
+ *  经典的Reactor模式，更多在于演示和说明，仅仅是有一种浓缩和抽象。
+ *  由于Netty更多用于生产，在实际开发中的业务处理这块，主要通过Handler来实现，所以Netty中在Handler的组织设计这块，远远比经典的Reactor模式实现，要纷繁复杂得多。
+ *
+ *  一个Netty Channel对应于一个Client连接，内部封装了一个Java NIO SelectableChannel 可查询通道。
+ *  再回到Handler。
+ *  Hander的根本使命，就是处理Channel的就绪事件，根据就绪事件，完成NIO处理和业务操作。比方Channel读就绪时，
+ *  Hander就开始读；Channel写就绪时，Hander就开始写。
+ *
+ *3.Netty中Handler的类型
+ *  从应用程序开发人员的角度来看，Netty的主要组件是ChannelHandler，所以，对ChannelHandler的分类，也是从应用开发的角度来的。
+ *  ChannelHandler -> ChannelInboundHandler
+ *  ChannelHandler -> ChannelOutboundHandler
+ *
+ *  从应用程序开发人员的角度来看，数据有入站和出站两种类型。
+ *  这里的出站和入站，不是网络通信方面的入站和出站。而是相对于Netty Channel与Java NIO Channel而言的。
+ *  数据入站，指的是数据从底层的Java NIO channel到Netty的Channel。数据出站，指的是通过Netty的Channel来操作底层的 Java NIO chanel。
+ *  从入站和出战的角度出发，Netty中的ChannelHandler主要由两种类型，ChannelInboundHandler和ChannelOutboundHandler。
+ *
+ * 3.Handler和Channel的关系
+ *  打个比方，如果Hander是太阳系的行星，那么Channel就是太阳系的恒星。Hander的服务对象和公转的轴心，就是Channel。
+ *  这可能是最为不恰当的一个比方，但是说的是事实。
  */
 public interface ChannelHandler {
 

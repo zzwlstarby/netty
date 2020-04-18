@@ -284,7 +284,139 @@ import java.util.concurrent.TimeUnit;
  *      ChannelFuture允许添加一个或多个(移除一个或多个)GenericFutureListener监听接口,方法名:addListener(), addListeners(),
  *      removeListener(), removeListeners().
  *
+ *
+ * 1.Future/Promise 模式
+ *   1.1 ChannelFuture的由来
+ *    由于Netty中的Handler 处理都是异步IO操作，结果是未知的。
+ *    Netty继承和扩展了JDK Future的API，定义了自身的Future系列类型，实现异步操作结果的获取和监控。
+ *    其中，最为重要的是ChannelFuture 。
+ *    之所以命名为ChannelFuture，表示跟Channel的操作有关。
+ *     ChannelFuture用于获取Channel相关的操作结果，添加事件监听器，取消IO操作，同步等待。
+ *
+ *   1.2来自Netty的官方建议
+ *   java.util.concurrent.Future是Java提供的接口，提供了对异步操作的简单干预。
+ *   Future接口定义了isDone()、isCancellable()，用来判断异步执行状态。Future接口的get方法，可以用来获取结果。get方法首先会判断任务是否执行完成，如果完成就返回结果，否则阻塞线程，直到任务完成。
+ *   Netty官方文档直接说明——Netty的网络操作都是异步的，Netty源码上大量使用了Future/Promise模式。
+ *   如果用户操作调用了sync或者await方法，会在对应的future对象上阻塞用户线程，例如future.channel().closeFuture().sync()。
+ *
+ *   Netty 的Future 接口，在继承了java.util.concurrent.Future的基础上，增加了一系列监听器方法，比如addListener()、removeListener() 等等。Netty强烈建议，通过添加监听器的方式获取IO结果，
+ *   而不是通过JDK Future的同步等待的方式去获取IO结果。
+ *
+ *   1.3Netty 的 Future 接口
+ *   Netty扩展了Java的Future，增加了监听器Listener接口，通过监听器可以让异步执行更加有效率，不需要通过get来等待异步执行结束，
+ *   而是通过监听器回调来精确地控制异步执行结束的时间点。这一点，正好是Netty在Future模式的最主要的改进。
+ *
+ *   1.4 ChannelFuture使用的实例
+ *   Netty的出站和入站操作，都是异步的。
+ *   以最为经典的NIO出站操作——write出站为例，说一下ChannelFuture的使用。
+ *   代码如下：
+ *   ChannelFuture future = ctx.channel().write(msg);
+ *      future.addListener(
+ *         new ChannelFutureListener()
+ *         {
+ *             @Override
+ *             public void operationComplete(ChannelFuture future)
+ *             {
+ *                 // write操作完成后的回调代码
+ *             }
+ *         });
+ *
+ *      在write操作调用后，Netty并没有完成对Java NIO底层连接的写入操作，出站操作是异步执行的。
+ *      如果需要获取IO结果，可以使用回调的方式。
+ *
+ *    使用ChannelFuture的异步完成后的回调，需要搭配使用另外的一个接口ChannelFutureListener ，
+ *    他从父接口哪里继承了一个被回调到的operationComplete操作完成的方法。
+ *
+ *    ChannelFutureListener 的父亲接口是GenericFutureListener 接口。
+ *    定义如下：
+ *    public interface GenericFutureListener
+ *                  <F extends Future<?>> extends EventListener
+ *    {
+ *       void operationComplete(F future) throws Exception;
+ *    }
+ *    异步操作完成后的回调代码，放在operationComplete方法中的实现中，就可以了。
+ *
+ *    1.5 Netty的 Promise接口
+ *    Netty的Future，只是增加了监听器。整个异步的状态，是不能进行设置和修改的。
+ *    换句话说，Future是只读的，是不可以写的。
+ *    于是，Netty的 Promise接口扩展了Netty的Future接口，它表示一种可写的Future，就是可以设置异步执行的结果。
+ *
+ *    部分源码如下：
+ *    public interface Promise<V> extends Future<V> {
+ *     Promise<V> setSuccess(V result);
+ *     Promise<V> setFailure(Throwable cause);
+ *     boolean setUncancellable();
+ *    //....
+ *     }
+ *
+ *     在IO操作过程，如果顺利完成、或者发生异常，都可以设置Promise的结果，并且通知Promise的Listener们。
+ *     而ChannelPromise接口，则继承扩展了Promise和ChannelFuture。所以，ChannelPromise既绑定了Channel，又具备了监听器的功能，
+ *     还可以设置IO操作的结果，是Netty实际编程使用的最多的接口。
+ *     在AbstratChannel的代码中，相当多的IO操作，都会返回ChannelPromise类型实例作为调用的返回值。 通过这个返回值，
+ *     客户程序可以用于读取IO操作的结果，执行IO操作真正完成后的回调。
+ *
+ *
+ *     1.6 ChannelPromise的监控流程
+ *     在AbstractChannel中，定义了几个对Channel的异步状态进行监控的Promise和Future成员，用于监控Channel的连接是否成功，连接是否关闭。
+ *     源码如下：
+ *     public abstract class AbstractChannel extends DefaultAttributeMap implements Channel {
+ *         //连接成功的监控
+ *         private final ChannelFuture succeededFuture = new SucceededChannelFuture(this, null);
+ *         //连接关闭的监控
+ *         private final CloseFuture closeFuture = new CloseFuture(this);
+ *        //...
+ *      }
+ *      对于每个Channel对象，都会有唯一的一个CloseFuture 成员，用来表示关闭的异步干预。如果要监控Channel的关闭，或者同步等待Channel关闭。
+ *      一般情况下，在应用程序中使用如下的代码：
+ *      // Start the server.
+ *      ChannelFuture f = b.bind(PORT).sync();
+ *      // Wait until the server socket is closed.
+ *      f.channel().closeFuture().sync();
+ *
+ *      一般来说，编写以上代码的都是在Main线程中用来启动ServerBootStrap的，所以Main线程会被阻塞，保证服务端Channel的正常运行。
+ *      上面的代码中，channel.closeFuture()不做任何操作，只是简单的返回channel对象中的closeFuture对象。而CloseFuture的sync方法，会将当前线程阻塞在CloseFuture上。
+ *      那么，f.channel().closeFuture().sync() 实际是如何工作的呢？
+ *
+ *      1.7 CloseFuture的sync 同步方法
+ *      CloseFuture继承了DefaultPromise的sync同步方法。
+ *      DefaultPromise的代码如下：
+ *
+ *      从源码可以看出，sync方法，调用了await方法。
+ *      在await方法中，CloseFuture 使用java 基础的synchronized 方法进行线程同步；并且，使用CloseFuture.wait / notify 这组来自Object根类中的古老方法进行线程之间的等待和唤醒。
+ *      在await方法，不断的自旋，判断当前的 CloseFuture 实例的结果是否已经完成，如果没有完成 !isDone() ，就不断的等待。一直到 isDone() 的值为true。
+ *
+ *
+ *      CloseFuture的 isDone() 的条件是否能够满足，和Channel的close 关闭连接的出站操作有关。
+ *      下一步，我们来看 isDone() 的条件，如何才能够满足？
+ *
+ *      1.8 close 出站处理流程
+ *      在Netty中，close 关闭连接的操作，属于所有的出站操作的一种。关于Netty出站处理的流程，在前面的文字中，已经非常详细的介绍了。这里不再赘述，只是简单的列出一个流程图。
+ *      close 关闭连接的出站操作，其流程如下图所示：
+ *      channel.close->pipeline.close->tail.close->outbound.close->head.close->unsafe.close->unsafe.doClose;
+ *
+ *      1.9 unsafe.doClose
+ *       unsafe.doClose 方法中，设置了CloseFuture 的result值。
+ *
+ *      1.10 closeFuture.setClosed()
+ *      在closeFuture.setClosed() 设置关闭的结果的过程中，主要完成以下三个工作：
+ *          1  设置result的值
+ *          2  notifyAll，唤醒在本Promise上等待的线程
+ *          3  回调listener
+ *
+ *
+ *      1.11 警惕死锁：Reactor线程不能sync
+ *      在上面的源码中，最终触发future对象的notify动作的线程，都是eventLoop线程（Reactor线程）。
+ *      一般情况下，Channel的出站和入站操作，也都是在eventLoop线程的轮询任务中完成的。
+ *      例如因为不论是用户直接关闭channel，或者eventLoop的轮询状态关闭channel，都会在eventLoop的线程内完成notify动作。notify那些通过sync操作，正在等待CloseFuture的哪些阻塞线程。
+ *      所以不要在Reactor线程内调用future对象的sync或者await方法。如果在Reactor线程进行sync或者await，会有可能引起死锁。
+ *      为什么呢？
+ *      在Reactor线程进行sync时，会进入等待状态，等待Future(DefaultPromise)的 isDone 的条件满足。通过前面的例子，我们已经看到了，而Future的isDone的条件，又需要Reactor线程的出站或者入站操作来满足。这是，Reactor线程既然已经处于等待状态，怎么可能再进行其他的出站或者入站操作呢？相当于自己等自己，这就是典型的死锁。
+ *      在实际开发中，由于应用程序代码都是编写在自定义的channelHandler处理器中，而channelHandler是在eventLoop线程（Reactor线程）内执行的。所以，不能在channelHandler中调用Future(DefaultPromise)的sync或者await两个同步方法。
+ *      正确的做法是：通过给Future(DefaultPromise) 增加listeners监听器 的方式，来干预异步操作的过程，处理异步操作的结果。
+ *      这样，可以避免使用Future带来的死锁。
+ *
  */
+
 public interface ChannelFuture extends Future<Void> {
 
     /**

@@ -53,6 +53,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *      Nio EventLoop 实现类，实现对注册到其中的 Channel 的就绪的 IO 事件，和对用户提交的任务进行处理
  *
  *
+ * 1.Netty中的NioEventLoop类，就是对应于非阻塞IO channel的Reactor 反应器。
+ *
+ * 2.NioEventLoop类型绑定了两个重要的java本地类型：一个线程类型，一个Selector类型。
+ *  本地Selector属性的作用，用于注册Java本地channel。本地线程属性的作用，主要是用于轮询。
+ *
+ * 3.在父类SingleThreadEventExecutor 中，定义了一个线程属性thread
+ *
+ * 4.Netty中，一个EventLoop，可以注册很多不同的Netty Channel。相当于是一对多的关系。
+ *  这一点，和Java NIO中Selector和channel的关系，也是一致的。
+ *
  *
  * {@link SingleThreadEventLoop} implementation which register the {@link Channel}'s to a
  * {@link Selector} and so does the multi-plexing of these in the event loop.
@@ -491,6 +501,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     protected void run() {
         for (;;) {
             try {
+                //第一步，查询 IO 就绪
                 switch (selectStrategy.calculateStrategy(selectNowSupplier, hasTasks())) {
                     case SelectStrategy.CONTINUE: // 默认实现下，不存在这个情况。
                         continue;
@@ -535,6 +546,8 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                     default:
                 }
 
+
+                //第二步，处理这些 IO 就绪
                 // TODO 1007 NioEventLoop cancel 方法
                 cancelledKeys = 0;
                 needsToSelectAgain = false;
@@ -553,6 +566,9 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                     final long ioStartTime = System.nanoTime();
                     try {
                         // 处理 Channel 感兴趣的就绪 IO 事件
+                        //完成第二步IO就绪事件处理的调用是processSelectedKeys() ，这个调用非常关键。
+                        //这个方法是查询就绪的 IO 事件, 然后处理它；第二个调用是 runAllTasks(), 这个方法的功能就是运行 taskQueue 中的任务。
+                        //关于EventLoop中如何处理任务，后面用专门的文章来讲解。
                         processSelectedKeys();
                     } finally {
                         // 运行所有普通任务和定时任务，限制时间
@@ -673,6 +689,11 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    /**
+     * 就绪事件的迭代处理
+     * 迭代 selectedKeys 获取就绪的 IO 事件, 然后为每个事件都调用 processSelectedKey 来处理它.
+     * 在这里， 通过k.attachment()取得这个通道对象，然后就调用 processSelectedKey 来处理这个 IO 事件和通道。
+     */
     private void processSelectedKeysOptimized() {
         // 遍历数组
         for (int i = 0; i < selectedKeys.size; ++i) {
@@ -705,6 +726,15 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    /**
+     * processSelectedKey 中处理了三个事件, 分别是:
+     * OP_READ, 可读事件, 即 Channel 中收到了新数据可供上层读取.
+     * OP_WRITE, 可写事件, 即上层可以向 Channel 写入数据.
+     * OP_CONNECT, 连接建立事件, 即 TCP 连接已经建立, Channel 处于 active 状态.
+     *
+     * @param k
+     * @param ch
+     */
     private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
         // 如果 SelectionKey 是不合法的，则关闭 Channel
         final AbstractNioChannel.NioUnsafe unsafe = ch.unsafe();
@@ -840,6 +870,16 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         return unwrappedSelector;
     }
 
+
+    /**
+     * 首先调用了 selector.selectNow() 方法，这个 selector 属性正是 Java NIO 中的多路复用器 Selector。selector.selectNow()
+     * 方法会检查当前是否有就绪的 IO 事件。如果有, 则返回就绪 IO 事件的个数；如果没有, 则返回0。
+     *
+     * 注意, selectNow() 是立即返回的，不会阻塞当前线程。 当 selectNow() 调用后， finally 语句块中会检查 wakenUp 变量是否为 true，
+     * 当为 true 时, 调用 selector.wakeup() 唤醒 select() 的阻塞调用。
+     * @return
+     * @throws IOException
+     */
     int selectNow() throws IOException {
         try {
             return selector.selectNow();

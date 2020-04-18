@@ -246,10 +246,227 @@ import java.nio.charset.UnsupportedCharsetException;
  * {@link ByteBufOutputStream}.
  */
 @SuppressWarnings("ClassMayBeInterface")
+
+/**
+ * 概述：
+ * Netty提供的ByteBuf与JDK的ByteBuffer相比，前者具有卓越的功能性和灵活性。
+ *
+ *
+ *
+ * 1.ByteBuf 是一个字节容器，内部是一个字节数组。
+ * 从逻辑上来分，字节容器内部，可以分为四个部分：
+ * 第一个部分是已经丢弃的字节，这部分数据是无效的；
+ * 第二部分是可读字节，这部分数据是 ByteBuf 的主体数据， 从 ByteBuf 里面读取的数据都来自这一部分;
+ * 第三部分的数据是可写字节，所有写到 ByteBuf 的数据都会写到这一段。
+ * 第四部分的字节，表示的是该 ByteBuf 最多还能扩容的大小。
+ *
+ * 2.ByteBuf 的三个指针
+ * ByteBuf 通过三个整型的指针（index），有效地区分可读数据和可写数据，使得读写之间相互没有冲突。
+ * 这个三个指针，分别是：
+ *    readerIndex（读指针）: 指示读取的起始位置。每读取一个字节，readerIndex 自增1 。一旦 readerIndex 与 writerIndex 相等，ByteBuf 不可读 。
+ *    writerIndex（写指针）:指示写入的起始位置。每写一个字节，writerIndex 自增1。一旦增加到 writerIndex 与 capacity（） 容量相等，表示 ByteBuf 已经不可写了 。
+ *                         capacity（）容量不是一个成员属性，是一个成员方法。表示 ByteBuf 内部的总容量。 注意，这个不是最大容量。
+ *    maxCapacity（最大容量）: 这三个指针，是三个int 型的成员属性，定义在 AbstractByteBuf 抽象基类中。
+ *                            指示可以 ByteBuf 扩容的最大容量。当向 ByteBuf 写数据的时候，如果容量不足，可以进行扩容。扩容的最大限度，
+ *                            直到 capacity（） 扩容到 maxCapacity为止，超过 maxCapacity 就会报错。capacity（）扩容的操作，是底层自动进行的。
+ * 3.Netty ByteBuf 优势（https://blog.csdn.net/crazymakercircle/article/details/84198042）
+ * Netty 提供了ByteBuf，来替代Java NIO的 ByteBuffer 缓，来操纵内存缓冲区。
+ * 与Java NIO的 ByteBuffer 相比，ByteBuf的优势如下：
+ *   1>Pooling (池化，这点减少了内存复制和GC，提升效率)
+ *   2>可以自定义缓冲类型
+ *   3>通过一个内置的复合缓冲类型实现零拷贝
+ *   4>扩展性好，比如 StringBuffer
+ *   5>不需要调用 flip()来切换读/写模式
+ *   6>读取和写入索引分开
+ *   7>方法链
+ *   8>引用计数
+ *
+ * 手动获取与释放ByteBuf
+ *    Netty环境下，业务处理的代码，基本上都在Handler处理器中的各个入站和出站方法中。
+ *    一般情况下，采用如下方法获取一个Java 堆中的缓冲区：ByteBuf heapBuffer = ctx.alloc().heapBuffer();
+ *    使用完成后，通过如下的方法，释放缓冲区：ReferenceCountUtil.release(heapBuffer );
+ *    上面的代码很简单，通过release方法减去 heapBuffer 的使用计数，Netty 会自动回收 heapBuffer 。
+ *    缓冲区内存的回收、二次分配等管理工作，是 Netty 自动完成的。
+ *
+ *
+ * 自动获取和释放 ByteBuf
+ * 方式一：TailHandler 自动释放
+ * ​ Netty默认会在ChannelPipline的最后添加的那个 TailHandler 帮你完成 ByteBuf的release。
+ * ​ 先看看，自动创建的ByteBuf实例是如何登场的？
+ * ​ Netty自动创建 ByteBuf实例
+ *   Netty 的 Reactor 线程会在 AbstractNioByteChannel.NioByteUnsafe.read() 处调用 ByteBufAllocator创建ByteBuf实例，将TCP缓冲区的数据读取到 Bytebuf 实例中，并调用 pipeline.fireChannelRead(byteBuf) 进入pipeline 入站处理流水线。
+ *
+ *   默认情况下，TailHandler自动释放掉ByteBuf实例
+ *    Netty的ChannelPipleline的流水线的末端是TailHandler，默认情况下如果每个入站处理器Handler都把消息往下传，TailHandler会释放掉ReferenceCounted类型的消息。
+ *
+ * 方式二：SimpleChannelInboundHandler 自动释放
+ *​ 如果业务Handler需要将 ChannelPipleline的流水线的默认处理流程截断，不进行后边的inbound入站处理操作,这时候末端 TailHandler自动释放缓冲区的工作，自然就失效了。
+ * ​ 这种场景下，业务Handler 有两种选择：
+ *        1>手动释放 ByteBuf 实例
+ *        2>继承 SimpleChannelInboundHandler，利用它的自动释放功能。
+ *
+ * 方式三：HeadHandler 自动释放
+ *  出站处理流程中，申请分配到的 ByteBuf，通过 HeadHandler 完成自动释放。
+ *  出站处理用到的 Bytebuf 缓冲区，一般是要发送的消息，通常由应用所申请。在出站流程开始的时候，通过调用 ctx.writeAndFlush(msg)，Bytebuf
+ *  缓冲区开始进入出站处理的 pipeline 流水线 。在每一个出站Handler中的处理完成后，最后消息会来到出站的最后一棒 HeadHandler，再经过一轮复杂的调用，
+ *  在flush完成后终将被release掉。(强调一下，HeadContext （HeadHandler）是出站处理流程的最后一棒。)
+ *
+ * 如何避免内存泄露
+ *   基本上，在 Netty的开发中，通过 ChannelHandlerContext 或 Channel 获取的缓冲区ByteBuf 默认都是Pooled，所以需要再合适的时机对其进行释放，避免造成内存泄漏。
+ *
+ * 自动释放的注意事项
+ *   我们已经知道了三种自动释放方法：
+ *       1>通过 TailHandler 自动释放入站 ByteBuf
+ *       2>继承 SimpleChannelInboundHandler 的完成 入站ByteBuf 自动释放
+ *       3>通过HeadHandler自动释放出站 ByteBuf
+ *
+ * 自动释放，注意事项如下：
+ *       1>入站处理流程中，如果对原消息不做处理，默认会调用 ctx.fireChannelRead(msg) 把原消息往下传，由流水线最后一棒 TailHandler 完成自动释放。
+ *       2>如果截断了入站处理流水线，则可以继承 SimpleChannelInboundHandler ，完成入站ByteBuf 自动释放。
+ *       3>出站处理过程中，申请分配到的 ByteBuf，通过 HeadHandler 完成自动释放。
+ *       4>出站处理用到的 Bytebuf 缓冲区，一般是要发送的消息，通常由应用所申请。在出站流程开始的时候，通过调用 ctx.writeAndFlush(msg)，Bytebuf 缓冲区开始进入出站处理的 pipeline 流水线 。在每一个出站Handler中的处理完成后，最后消息会来到出站的最后一棒 HeadHandler，再经过一轮复杂的调用，在flush完成后终将被release掉。
+ *
+ * 手动释放的注意事项(手动释放是自动释放的重要补充和辅助。)
+ *  手动释放操作，大致有如下注意事项：
+ *      1>入站处理中，如果将原消息转化为新的消息并调用 ctx.fireChannelRead(newMsg)往下传，那必须把原消息release掉;
+ *      2>入站处理中，如果已经不再调用 ctx.fireChannelRead(msg) 传递任何消息，也没有继承SimpleChannelInboundHandler 完成自动释放，那更要把原消息release掉;
+ *      3>多层的异常处理机制，有些异常处理的地方不一定准确知道ByteBuf之前释放了没有，可以在释放前加上引用计数大于0的判断避免异常； 有时候不清楚ByteBuf被引用了多少次，但又必须在此进行彻底的释放，可以循环调用reelase()直到返回true。
+ *
+ *  特别需要强调的，是上边的第一种情况。如果在入站处理的 handlers 传递过程中，传递了新的ByteBuf 值，老ByteBuf 值需要自己手动释放。老的ByteBuf 值，就是从pipeline流水线入口传递过来的 ByteBuf 实例。
+ *  总之，只要是在传递过程中，没有传递下去的ByteBuf就需要手动释放，避免不必要的内存泄露。
+ *
+ *
+ * 缓冲区 Allocator 分配器
+ *    Netty通过 ByteBufAllocator分配缓冲区。Netty提供了ByteBufAllocator的两种实现：PoolByteBufAllocator和UnpooledByteBufAllocator。
+ *    前者将ByteBuf实例放入池中，提高了性能，将内存碎片减少到最小。这个实现采用了一种内存分配的高效策略，称为 jemalloc。它已经被好几种现代操
+ *    作系统所采用。后者则没有把ByteBuf放入池中，每次被调用时，返回一个新的ByteBuf实例。
+ *
+ * 分配器 Allocator的类型
+ *    PooledByteBufAllocator：可以重复利用之前分配的内存空间。
+ *          为了减少内存的分配回收以及产生的内存碎片，Netty提供了PooledByteBufAllocator 用来分配可回收的ByteBuf，可以把PooledByteBufAllocator 看做一个池子，需要的时候从里面获取ByteBuf，用完了放回去，以此提高性能。
+ *
+ *    UnpooledByteBufAllocator：不可重复利用，由JVM GC负责回收。
+ *          顾名思义Unpooled就是不会放到池子里，所以根据该分配器分配的ByteBuf，不需要放回池子，由JVM自己GC回收。
+ *
+ *    这两个类，都是AbstractByteBufAllocator的子类，AbstractByteBufAllocator实现了一个接口，叫做ByteBufAllocator。
+ *
+ *
+ *    可以做一个对比试验：
+ *           使用UnpooledByteBufAllocator的方式创建ByteBuf的时候，单台24核CPU的服务器，16G内存，刚启动时候，10000个长连接，每秒所有的连接发一条消息，短时间内，可以看到内存占到10G多点，但随着系统的运行，内存不断增长，直到整个系统内存溢出挂掉。
+ *           把UnpooledByteBufAllocator换成PooledByteBufAllocator，通过试验，内存使用量机器能维持在一个连接占用1M左右，内存在10G左右，经常长期的运行测试，发现都能维持在这个数量，系统内存不会崩溃。
+ *
+ *默认的分配器
+ *    默认的分配器 ByteBufAllocator.DEFAULT ，可以通过 Java 系统参数（SystemProperty ）选项 io.netty.allocator.type 去配置，使用字符串值：“unpooled”，“pooled”。
+ *    是4.0版本的源码，默认为UnpooledByteBufAllocator。而4.1 版本，默认为 PooledByteBufAllocator。因此，4.1版本的代码，是和上面的代码稍微有些不同的。
+ *
+ *设置通道Channel的分配器
+ *    在4.x版本中，UnpooledByteBufAllocator是默认的allocator，尽管其存在某些限制。
+ *    现在PooledByteBufAllocator已经广泛使用一段时间，并且我们有了增强的缓冲区泄漏追踪机制，所以是时候让PooledByteBufAllocator成为默认了。
+ *     ServerBootstrap b = new ServerBootstrap()
+ *         .group(bossGroup, workerGroup)
+ *         .channel(NioServerSocketChannel.class)
+ *         .localAddress(port)
+ *         .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+ *         .childHandler(new ChannelInitializer<SocketChannel>() {
+ *             @Override
+ *             public void initChannel(SocketChannel ch) throws Exception {
+ *                 ch.pipeline().addLast(...);
+ *             }
+ *         });
+ *
+ *     使用Netty带来的又一个好处就是内存管理。只需一行简单的配置，就能获得到内存池带来的好处。在底层，Netty实现了一个Java版的Jemalloc内存管理库，为我们做完了所有“脏活累活”！
+ *
+ *缓冲区内存的类型(说完了分配器的类型，再来说下缓冲区的类型)
+ *     依据内存的管理方不同，分为堆缓存和直接缓存。也就是Heap ByteBuf 和 Direct ByteBuf。另外，为了方便缓冲区进行组合，提供了一种组合缓存区。
+ *
+ *三种缓冲区的介绍如下：
+ *    堆缓冲区:
+ *            概述：数据存存储在JVM的堆空间中，又称为支撑数组，通过 hasArray 来判断是不是在堆缓冲区中
+ *            优点:没使用池化情况下能提供快速的分配和释放
+ *            劣势:发送之前都会拷贝到直接缓冲区
+ *    直接缓冲区：
+ *            概述：存储在物理内存中
+ *            优点：能获取超过jvm堆限制大小的空间；写入channel比堆缓冲区更快
+ *            劣势：释放和分配空间昂贵(使用系统的方法) ；操作时需要复制一次到堆上
+ *    复合缓冲：
+ *            概述：单个缓冲区合并多个缓冲区表示
+ *            优点：操作多个更方便
+ *
+ *    上面三种缓冲区的类型，无论哪一种，都可以通过池化、非池化的方式，去获取。
+ *
+ *Unpooled 非池化缓冲区的使用方法
+ *    Unpooled也是用来创建缓冲区的工具类，Unpooled 的使用也很容易。
+ *    //创建复合缓冲区
+ *    CompositeByteBuf compBuf = Unpooled.compositeBuffer();
+ *    //创建堆缓冲区
+ *    ByteBuf heapBuf = Unpooled.buffer(8);
+ *    //创建直接缓冲区
+ *    ByteBuf directBuf = Unpooled.directBuffer(16);
+ *
+ *    Unpooled类的应用场景：Unpooled类让ByteBuf也同样适用于不需要其他的Netty组件的、无网络操作的项目，这些项目可以从这个高性能的、可扩展的buffer API中获益。
+ *
+ *
+ * Netty 的 ByteBuf 的内存回收工作，是通过引用计数的方式管理的。
+ *   大致的引用计数的规则如下：
+     * 默认情况下，当创建完一个 ByteBuf 时，它的引用为1。
+     * 每次调用 retain()方法， 它的引用就加 1 ；
+     * 每次调用 release() 方法，是将引用计数减 1。
+     * 如果引用为0，再次访问这个 ByteBuf 对象，将会抛出异常。
+     *
+     * 如果引用为0，表示这个 ByteBuf 没有地方被引用到，需要回收内存。
+     * Netty的内存回收分为两种情况：
+     * Pooled 池化的内存，放入可以重新分配的 ByteBuf 池子，等待下一次分配。
+     * Unpooled 未池化的 ByteBuf 内存，确保GC 可达，确保 能被 JVM 的 GC 回收器回收到。
+     *
+ *
+ *
+ * ByteBuf 的浅层复制
+ *    ByteBuf 的浅层复制分为两种，有切片slice 浅层复制，和duplicate 浅层复制。
+ *
+ *    slice 切片浅层复制:
+ *          首先说明一下，这是一种非常重要的操作。可以很大程度的避免内存拷贝。这一点，对于大规模消息通讯来说，是非常重要的。
+ *          slice 操作可以获取到一个 ByteBuf 的一个切片。一个ByteBuf，可以进行多次的切片操作，多个切片可以共享一个存储区域的 ByteBuf 对象。
+ *
+ *          slice 操作方法有两个重载版本：
+ *                public ByteBuf slice():不带参数的 slice 方法，等同于 buf.slice(buf.readerIndex(), buf.readableBytes()) 调用, 即返回 ByteBuf 实例中可读部分的切片。
+ *                public ByteBuf slice(int index, int length):而带参数 slice(int index, int length) 方法，可以通过灵活的设置不同的参数，来获取到 buf 的不同区域的切片。
+ *                两个版本有非常紧密的联系。
+ *                调用slice（）方法后，返回的 ByteBuf 的切片
+ *
+ *          调用slice（）方法后，返回的ByteBuf 切片的属性，大致如下：
+ *                     slice 的 readerIndex（读指针）的值为 0
+ *                     slice 的 writerIndex（写指针） 的 值为源Bytebuf的 readableBytes() 可读字节数。
+ *                     slice 的 maxCapacity（最大容量） 的值为源Bytebuf的 readableBytes() 可读字节数。maxCapacity 与 writerIndex 值相同，切片不可以写。
+ *                     切片的可读字节数，为自己的 writerIndex - readerIndex。所有，切片和源Bytebuf的 readableBytes() 可读字节数相同。
+ *                     也就是说，切片可读，不可写。
+ *         slice（）切片和原ByteBuf的联系：
+ *                     切片不会拷贝原ByteBuf底层数据，底层数组和原ByteBuf的底层数组是同一个
+ *                     切片不会改变原 ByteBuf 的引用计数。
+ *
+ *          根本上，调用slice（）方法生成的切片，是 源Bytebuf 可读部分的浅层复制。
+ *
+ *    duplicate() 浅层复制
+ *           duplicate() 返回的是源ByteBuf 的整个对象的一个浅层复制，包括如下内容：
+ *                       duplicate() 会创建自己的读写指针，但是值与源ByteBuf 的读写指针相同；
+ *                       duplicate() 不会改变源 ByteBuf 的引用计数
+ *                       duplicate() 不会拷贝 源ByteBuf 的底层数据
+ *
+ *    duplicate() 和slice() 方法，都是浅层复制。不同的是，slice() 方法是切取一段的浅层复制，duplicate() 是整个的浅层复制。
+ *
+ *    浅层复制的问题
+ *       浅层复制方法不会拷贝数据，也不会改变 ByteBuf 的引用计数，这就会导致一个问题。
+ * ​     在源 ByteBuf 调用 release() 之后，引用计数为零，变得不能访问。这个时候，源 ByteBuf 的浅层复制实例，也不能进行读写。如果再对浅层复制实例进行读写，就会报错。
+ * ​     因此，在调用浅层复制实例时，可以通过调用一次 retain() 方法 来增加引用，表示它们对应的底层的内存多了一次引用，引用计数为2，在浅层复制实例用完后，需要调用两次 release() 方法，将引用计数减一，不影响源ByteBuf的内存释放。
+ *
+ * */
 public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
 
     /**
      * Returns the number of bytes (octets) this buffer can contain.
+     * capacity（）容量不是一个成员属性，是一个成员方法。表示 ByteBuf 内部的总容量。 注意，这个不是最大容量。
+     * capacity（）扩容的操作，是底层自动进行的。
+     *
+     * 表示 ByteBuf 的容量，包括丢弃的字节数、可读字节数、可写字节数。
      */
     public abstract int capacity(); // 容量
 
@@ -266,6 +483,13 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * capacity of this buffer beyond the maximum capacity using {@link #capacity(int)} or
      * {@link #ensureWritable(int)}, those methods will raise an
      * {@link IllegalArgumentException}.
+     *
+     * 指示可以 ByteBuf 扩容的最大容量。
+     * 当向 ByteBuf 写数据的时候，如果容量不足，可以进行扩容。
+     * 扩容的最大限度，直到 capacity（） 扩容到 maxCapacity为止，超过 maxCapacity 就会报错。
+     *
+     *
+     * 表示 ByteBuf 底层最大能够占用的最大字节数。当向 ByteBuf 中写数据的时候，如果发现容量不足，则进行扩容，直到扩容到 maxCapacity。
      */
     public abstract int maxCapacity(); // 最大容量
 
@@ -323,8 +547,10 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
 
     /**
      * Returns the {@code readerIndex} of this buffer.
+     * 指示读取的起始位置。
+     * 每读取一个字节，readerIndex 自增1 。一旦 readerIndex 与 writerIndex 相等，ByteBuf 不可读 。
      */
-    public abstract int readerIndex(); // 读取位置
+    public abstract int readerIndex(); // 读取位置（读指针）
 
     /**
      * Sets the {@code readerIndex} of this buffer.
@@ -333,13 +559,18 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      *         if the specified {@code readerIndex} is
      *            less than {@code 0} or
      *            greater than {@code this.writerIndex}
+     *
+     *
      */
-    public abstract ByteBuf readerIndex(int readerIndex);
+    public abstract ByteBuf readerIndex(int readerIndex);//读指针
 
     /**
      * Returns the {@code writerIndex} of this buffer.
+     * 指示写入的起始位置。
+     * 每写一个字节，writerIndex 自增1。一旦增加到 writerIndex 与 capacity（） 容量相等，表示 ByteBuf 已经不可写了 。
+     *
      */
-    public abstract int writerIndex(); // 写入位置
+    public abstract int writerIndex(); // 写入位置 （写指针）
 
     /**
      * Sets the {@code writerIndex} of this buffer.
@@ -407,18 +638,23 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
     /**
      * Returns the number of readable bytes which is equal to
      * {@code (this.writerIndex - this.readerIndex)}.
+     *
+     * 返回表示 ByteBuf 当前可读取的字节数，它的值等于 writerIndex - readerIndex 。
      */
     public abstract int readableBytes(); // 剩余可读字节数
 
     /**
      * Returns the number of writable bytes which is equal to
      * {@code (this.capacity - this.writerIndex)}.
+     *
+     * 返回表示 ByteBuf 当前可写入的字节数，它的值等于 capacity（）- writerIndex。
      */
     public abstract int writableBytes(); // 剩余可写字节数
 
     /**
      * Returns the maximum possible number of writable bytes, which is equal to
      * {@code (this.maxCapacity - this.writerIndex)}.
+     * 返回可写的最大字节数，它的值等于 maxCapacity-writerIndex 。
      */
     public abstract int maxWritableBytes();
 
@@ -426,6 +662,8 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * Returns {@code true}
      * if and only if {@code (this.writerIndex - this.readerIndex)} is greater
      * than {@code 0}.
+     *
+     * 表示 ByteBuf 是否可读。如果 writerIndex 指针的值大于 readerIndex 指针的值 ，则表示可读。否则为不可写。
      */
     public abstract boolean isReadable();
 
@@ -438,6 +676,9 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * Returns {@code true}
      * if and only if {@code (this.capacity - this.writerIndex)} is greater
      * than {@code 0}.
+     *
+     * 表示 ByteBuf 是否可写。如果 capacity（） 容量大于 writerIndex 指针的位置 ，则表示可写。否则为不可写。
+     * 注意：如果 isWritable() 返回 false，并不代表不能往 ByteBuf 中写数据了。 如果Netty发现往 ByteBuf 中写数据写不进去的话，会自动扩容 ByteBuf。
      */
     public abstract boolean isWritable();
 
@@ -463,6 +704,8 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * reposition the current {@code readerIndex} to the marked
      * {@code readerIndex} by calling {@link #resetReaderIndex()}.
      * The initial value of the marked {@code readerIndex} is {@code 0}.
+     *
+     * 表示把当前的写指针writerIndex 保存在 markedWriterIndex 属性中；
      */
     public abstract ByteBuf markReaderIndex(); // 标记读取位置
 
@@ -473,6 +716,8 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * @throws IndexOutOfBoundsException
      *         if the current {@code writerIndex} is less than the marked
      *         {@code readerIndex}
+     *
+     * 表示把当前的写指针 writerIndex 恢复到之前保存的 markedWriterIndex 值 。
      */
     public abstract ByteBuf resetReaderIndex();
 
@@ -565,6 +810,14 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * @throws IndexOutOfBoundsException
      *         if the specified {@code index} is less than {@code 0} or
      *         {@code index + 1} is greater than {@code this.capacity}
+     *
+     *  getTYPE(TYPE value）基础类型读取，不改变指针值
+     * 基础数据类型的读取，可以读取 8大基础类型。
+     * 具体如下：getByte()、 getBoolean()、getChar()、getShort()、getInt()、getLong()、getFloat()、getDouble() ，从 ByteBuf读取对应的基础类型的数据。
+     *
+     * getType 系列与readTYPE系列的不同：
+     * getType 系列 不会 改变读指针 readerIndex ；
+     * readTYPE系列 会 改变读指针 readerIndex 的值。
      */
     public abstract byte  getByte(int index);
 
@@ -987,6 +1240,14 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * @throws IndexOutOfBoundsException
      *         if the specified {@code index} is less than {@code 0} or
      *         {@code index + 1} is greater than {@code this.capacity}
+     * setTYPE(TYPE value）基础类型写入，不改变指针值
+     * 基础数据类型的写入，包含了 8大基础类型的写入。
+     * 具体如下：setByte()、 setBoolean()、setChar()、setShort()、setInt()、setLong()、setFloat()、setDouble() ，向 ByteBuf 写入基础类型的数据。
+     * setType 系列与writeTYPE系列的不同：
+     * setType 系列 不会 改变写指针 writerIndex ；
+     * writeTYPE系列 会 改变写指针 writerIndex 的值。
+     *
+     *
      */
     public abstract ByteBuf setByte(int index, int value);
 
@@ -1356,6 +1617,11 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      *
      * @throws IndexOutOfBoundsException
      *         if {@code this.readableBytes} is less than {@code 1}
+     *
+     * readType(） 基础类型读取
+     * 基础数据类型的读取，可以读取 8大基础类型。
+     * 具体如下：readByte()、readBoolean()、readChar()、readShort()、readInt()、readLong()、readFloat()、readDouble() ，从 ByteBuf读取对应的基础类型的数据。
+     *
      */
     public abstract byte  readByte();
 
@@ -1393,6 +1659,10 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      *
      * @throws IndexOutOfBoundsException
      *         if {@code this.readableBytes} is less than {@code 2}
+     *
+     *
+     * 返回当前索引的 (无符号) Short 型，读索引加2
+     * 
      */
     public abstract int   readUnsignedShort();
 
@@ -1412,6 +1682,8 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      *
      * @throws IndexOutOfBoundsException
      *         if {@code this.readableBytes} is less than {@code 3}
+     *
+     * 返回当前索引的 (无符号) 24-bit 中间值，读索引加3
      */
     public abstract int   readMedium();
 
@@ -1469,6 +1741,8 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      *
      * @throws IndexOutOfBoundsException
      *         if {@code this.readableBytes} is less than {@code 4}
+     *
+     *   返回当前索引的(无符号) 整型，读索引加4
      */
     public abstract long  readUnsignedInt();
 
@@ -1657,6 +1931,9 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      *
      * @throws IndexOutOfBoundsException
      *         if {@code dst.length} is greater than {@code this.readableBytes}
+     *
+     * 把 ByteBuf 里面的数据全部读取到 dst 字节数组中，这里 dst 字节数组的大小通常等于 readableBytes() 。
+     * 这个方法，也是最为常用的一个方法。
      */
     public abstract ByteBuf readBytes(byte[] dst);
 
@@ -1769,6 +2046,9 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      *
      * @throws IndexOutOfBoundsException
      *         if {@code this.writableBytes} is less than {@code 1}
+     * 方法五：writeTYPE(TYPE value） 基础类型写入方法
+     * 基础数据类型的写入，包含了 8大基础类型的写入。
+     * 具体如下：writeByte()、 writeBoolean()、writeChar()、writeShort()、writeInt()、writeLong()、writeFloat()、writeDouble() ，向 ByteBuf写入基础类型的数据。
      */
     public abstract ByteBuf writeByte(int value);
 
@@ -1964,6 +2244,8 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      *
      * @throws IndexOutOfBoundsException
      *         if {@code src.length} is greater than {@code this.writableBytes}
+     *
+     * 把字节数组 src 里面的数据全部写到 ByteBuf。这个是最为常用的一个方法。
      */
     public abstract ByteBuf writeBytes(byte[] src);
 
@@ -2136,6 +2418,9 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      *
      * @return {@code -1} if the processor iterated to or beyond the end of the readable bytes.
      *         The last-visited index If the {@link ByteProcessor#process(byte)} returned {@code false}.
+     *
+     *
+     * 查找byte,返回byte的索引
      */
     public abstract int forEachByte(ByteProcessor processor); // 遍历 ByteBuf ，进行自定义处理
 
@@ -2172,6 +2457,9 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * This method is identical to {@code buf.copy(buf.readerIndex(), buf.readableBytes())}.
      * This method does not modify {@code readerIndex} or {@code writerIndex} of
      * this buffer.
+     *
+     *
+     * 返回的 ByteBuf 有数据的独立副本。
      */
     public abstract ByteBuf copy(); // 拷贝可读部分的字节数组。独立，互相不影响。
 
@@ -2361,6 +2649,9 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      * Returns {@code true} if and only if this buffer has a backing byte array.
      * If this method returns true, you can safely call {@link #array()} and
      * {@link #arrayOffset()}.
+     *
+     * 如果byteBuf可以直接返回一个数组就返回true
+     * (heap buf才会为true)
      */
     public abstract boolean hasArray();
 
@@ -2369,6 +2660,8 @@ public abstract class ByteBuf implements ReferenceCounted, Comparable<ByteBuf> {
      *
      * @throws UnsupportedOperationException
      *         if there no accessible backing byte array
+     *
+     * hasArray返回true,该方法就会返回一个数组
      */
     public abstract byte[] array();
 

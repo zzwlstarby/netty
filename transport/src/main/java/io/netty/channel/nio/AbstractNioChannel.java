@@ -73,6 +73,11 @@ public abstract class AbstractNioChannel extends AbstractChannel {
 
     /**
      * Netty NIO Channel 对象，持有的 Java 原生 NIO 的 Channel 对象
+     * 这个成员的类型是 java本地类型SelectableChannel 。在《Java NIO Channel (netty源码死磕1.3)》一文中已经讲到过，
+     * SelectableChannel 类型这个是所有java本地非阻塞NIO 通道类型的父类。
+     *
+     * 也就是说，一个Netty Channel 类型，封装了一个java非阻塞NIO 通道类型成员。这个被封装的本地Java 通道成员ch，
+     * 在AbstractNioChannel的构造函数中，被初始化。
      */
     private final SelectableChannel ch;
     /**
@@ -123,6 +128,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         this.ch = ch;
         this.readInterestOp = readInterestOp;
         try {
+            //因为是非阻塞IO， ch.configureBlocking（false） 方法被调用，通道被设置为非阻塞。
             ch.configureBlocking(false);
         } catch (IOException e) {
             try {
@@ -454,6 +460,15 @@ public abstract class AbstractNioChannel extends AbstractChannel {
         boolean selected = false;
         for (;;) {
             try {
+                /**
+                 * Netty的Channel通过javaChannel()方法，取得了Java本地Channel。
+                 * 这个javaChannel()方法，它返回的是一个 Java NIO SocketChannel。
+                 * 前面讲到，AbstractNioChannel通道类有一个本地Java 通道成员ch，在AbstractNioChannel的构造函数中，被初始化。
+                 * javaChannel()取到的，就是这个ch成员属性。通过最后一步，Netty终于将这个 SocketChannel 注册到与 eventLoop 关联的 selector 上了。
+
+                   特别注意一下 register 的第三个参数，这个参数是设置 selectionKey 的附加对象的， 和调用 selectionKey.attach(object) 的效果一样。
+
+                 */
                 selectionKey = javaChannel().register(eventLoop().unwrappedSelector(), 0, this);
                 return;
             } catch (CancelledKeyException e) {

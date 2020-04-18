@@ -74,7 +74,7 @@ import java.net.SocketAddress;
  * resources once you are done with the {@link Channel}. This ensures all resources are
  * released in a proper way, i.e. filehandles.
  *
- * 概述：
+ * 1.概述：
  *      首先强调一点:NIO的Channel与Netty的Channel不是一个东西!
  *      Netty重新设计了Channel接口,并且给予了很多不同的实现。Channel时Netty的网络抽象类,除了NIO中Channel所包含的网络I/O操作,
  *      主动建立/关闭连接,获取双方网络地址的功能外,还包含了Netty框架的功能,例如:获取Channel的EventLoop\Pipeline等。
@@ -119,6 +119,24 @@ import java.net.SocketAddress;
  *       分别有基于传统阻塞型I/O模型的Channel，基于java NIO selector模型的Channel，基于FreeBSD I/O复用模型KQueue的Channel，基于
  *       Linux Epoll边缘触发模型实现的Channel；按功能来看，主要分为客户端Channel和服务端Channel，常用的有客户端NioSocketChannel和
  *       服务端NioServerSocketChannel，两者分别封装了java.nio中包含的 ServerSocketChannel和SocketChannel的功能
+ *
+ *
+ * 2.Netty 还支持非常多的通讯连接协议，每种协议还有 NIO(异步 IO) 和 OIO(Old-IO， 即传统的阻塞 IO) 版本的区别。对应于不同协议，都有不同的 Channel 类型与之对应。
+ * 下面是一些常用的 Channel 类型:
+ * NioSocketChannel： 代表异步的客户端 TCP Socket 连接.
+ * NioServerSocketChannel： 异步的服务器端 TCP Socket 连接.
+ * NioDatagramChannel： 异步的 UDP 连接
+ * NioSctpChannel： 异步的客户端 Sctp 连接.
+ * NioSctpServerChannel： 异步的 Sctp 服务器端连接.
+ * OioSocketChannel： 同步的客户端 TCP Socket 连接.
+ * OioServerSocketChannel： 同步的服务器端 TCP Socket 连接.
+ * OioDatagramChannel： 同步的 UDP 连接
+ * OioSctpChannel： 同步的 Sctp 服务器端连接.
+ * OioSctpServerChannel： 同步的客户端 TCP Socket 连接.
+ * 以当下的编程来说，一般来说，用到最多的通讯协议，还是 TCP 协议。所以，本文选取NioSocketChannel 类，作为channel 连接家族类的代表，进行讲解。
+ * 了解了NioSocketChannel 类，在使用的方法上，其他的通道类型，基本上是一样的。
+ *
+ *
  *
  */
 public interface Channel extends AttributeMap, ChannelOutboundInvoker, Comparable<Channel> {

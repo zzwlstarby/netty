@@ -41,6 +41,56 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 /**
+ * 一. Netty做了什么？
+ * 1.Netty实现了对Java NIO的封装，提供了更方便使用的接口；
+ * 2.Netty利用责任链模式实现了ChannelPipeline这一概念，基于ChannelPipeline，我们可以 优雅的实现网络消息的处理（可插拔，解耦）；
+ * 3.Netty的Reactor线程模型，利用无锁化提高了系统的性能；
+ * 4.Netty实现了ByteBuf用于对字节进行缓存和操作，相比JDK的ByteBuffer，它更易用，同时还提供了Buffer池的功能，对于UnpooledDirectByteBuf和PooledByteBuf，Netty还对其内存使用进行了跟踪，发现内存泄漏时会给出报警；
+ * 链接：https://www.jianshu.com/p/b3e74973641e
+ *
+ * 二.Netty对JDK NIO的封装
+ * JDK NIO有ServerSocketChannel、SocketChannel、Selector、SelectionKey几个核心概念。
+ * Netty提供了一个Channel接口统一了对网络的IO操作，其底层的IO通信是交给Unsafe接口实现，而Channel主要负责更高层次的read、write、flush、和ChannelPipeline、Eventloop等组件的交互，以及一些状态的展示；做到了职责的清晰划分，对使用者是很友好的，规避了JDK NIO中一些比较繁琐复杂的概念和流程。
+ * Channel、Unsafe继承UML图
+ * Channel和Unsafe是分多级别实现的，不同级别的Channel和Unsafe对应了不同级别的实现，也是“职责单一原则”的体现。
+ * 链接：https://www.jianshu.com/p/b3e74973641e
+ *
+ * 三.ChannelPipeline责任链模型
+ * 借用网上的一张图表示Channel、ChannelPipeline、ChannelHandlerContext和ChannelHandler之间的关系。
+ * 每个Channel都持有一个ChannelPipeline，通过Channel的读写等IO操作实际上是交由ChannelPipeline处理的，
+ * 而ChannelPipeline会持有一个ChannelHandlerContext链表，每个Context内部又包含一个ChannelHandler，
+ * 使用者在Pipeline上添加handler负责逻辑处理，ChannelHandlerContext负责事件的传递流转。
+ * 每个ChannelPipeline都会持有2个特殊的ChannelHandlerContext——head和tail，他们分别是Context链表的头和尾。
+ *
+ * ChannelPipeline上的事件，分为Inbound事件和Outbound事件2种，Inbound事件从headContext读入，在Context链上的InboundHandler
+ * 上正向依次流动；Outbound事件从Channel（即ChannelPipeline）上触发，则从tailContext上出发，在Context链上的OutboundHandler
+ * 上反向依次流动，若从某一个Context上触发，则从这个Context之后的下一个OutboundContext开始执行。headContext利用Unsafe完成实际的IO操作。
+ *
+ * 我们在使用Netty的时候，业务逻辑其实基本都存在于ChannelHandler；Netty也为我们提供了很多通用的Handler，如一些常用的编解码Handler，
+ * 常见应用层协议的Handler，整流、心跳、日志等常用功能的Handler，合理使用这些Handler能迅速提高我们开发的效率。
+ *
+ * 四.Reactor线程模型
+ * Reactor模型是一种常见的并发编程模型，关于React模型可以参考这篇文章Reactor模型，React模型改变了Thread Per Connection的模式，
+ * 它将一个网络IO操作分为2部分：连接的建立，网络通信及消息处理；这两部分分别用单独的线程池去处理（一般情况下，连接的建立用单独的一个线程就足够了），
+ * 这样做的好处如下：功能解耦、利于维护、利于组件化复用、方便细粒度的并发控制，另外可以通过减少线程数，避免大量的线程切换。其模型图如下：
+ *
+ * 单的说，一个Reactor线程（池）负责接收所有的连接请求，然后将连接产生的Channel赋给Work线程池中的线程，接下来的通信操作都交给Work线程执行。
+ * Netty结合NIO的特点合理的使用了Reactor模型，具体地说，Netty的Reactor线程接收到一个连接请求后，会创建一个Channel，并为这个Channel分配一个EventLoop，
+ * 每个EventLoop对应一个线程，Channel上的IO操作将在EventLoop上执行，一个Channel仅绑定在一个EventLoop上，一个EventLoop可以对应多个Channel，这样就避免了同步，也提高了线程的使用效率。
+ * 实际上，EventLoop中的线程除了执行IO操作，还会执行ChannelPipeline上的handler的责任链方法，这样做是为了避免频换切换线程带来的损耗，
+ * 所以handler中一般不可以放置耗时的任务，如果有耗时的任务，可以将任务放入自定义的线程池中执行。
+ *
+ * 链接：https://www.jianshu.com/p/b3e74973641e
+ *
+ * 五.ByteBuf
+ * Java的NIO给我们提供了缓冲区的实现ByteBuffer，但是它的易用性较差（读写模式需要切换等问题），所以，Netty自己重新实现了缓冲区ByteBuf，
+ * ByteBuf的API更易用、并且提供了内存池的功能，对于池化的ByteBuf和直接内存的ByteBuf，Netty还提供了对内存泄漏的监控（并且设置了各种性能级别），
+ * 另外ByteBuf还提供了对ByteBuffer的兼容。
+ *
+ * 链接：https://www.jianshu.com/p/b3e74973641e
+ *
+ *
+ *
  * 概述：
  *      1.Bootstrap的主要作用就是处理程序启动时候的逻辑，通过它你可以配置你的应用。
  *      你可以使用Bootstrap连接到某个客户端的ip和port，或者将服务端绑定到某个端口上。
